@@ -1,0 +1,47 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Build output
+dist/
+dist-electron/
+build/
+out/
+release/
+*.tsbuildinfo
+
+# Native build artifacts (virtual camera C++ module)
+*.obj
+*.lib
+*.exp
+*.pdb
+*.ilk
+x64/
+Debug/
+Release/
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Editor / OS
+.vscode/*
+!.vscode/extensions.json
+.idea/
+.DS_Store
+Thumbs.db
+
+# Claude Code local settings
+.claude/settings.local.json
+
+# MediaPipe model assets (large binaries — document download in README instead)
+# Uncomment if models are not committed:
+# *.task
