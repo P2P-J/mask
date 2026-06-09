@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Mask PoC — 성능 검증</title>
+    <style>
+      body { margin: 0; font-family: system-ui, sans-serif; background: #111; color: #eee; }
+      #app { display: flex; gap: 12px; padding: 12px; }
+      #stage { position: relative; }
+      canvas { background: #000; max-width: 100%; height: auto; }
+      #controls { display: flex; flex-direction: column; gap: 8px; min-width: 240px; }
+      #stats { white-space: pre; font-family: monospace; font-size: 13px; background: #1c1c1c; padding: 10px; border-radius: 6px; }
+      label { display: flex; justify-content: space-between; gap: 8px; align-items: center; }
+      select, input { padding: 4px; }
+      #error { color: #ff6b6b; font-size: 13px; }
+    </style>
+  </head>
+  <body>
+    <div id="app">
+      <div id="stage"><canvas id="canvas"></canvas></div>
+      <div id="controls">
+        <label>카메라 <select id="device"></select></label>
+        <label>해상도
+          <select id="resolution">
+            <option value="1280x720">720p</option>
+            <option value="1920x1080" selected>1080p</option>
+          </select>
+        </label>
+        <label>FPS
+          <select id="fps">
+            <option value="30" selected>30</option>
+            <option value="60">60</option>
+          </select>
+        </label>
+        <label>메시 오버레이 <input type="checkbox" id="overlay" checked /></label>
+        <div id="stats">초기화 중…</div>
+        <div id="error"></div>
+      </div>
+    </div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

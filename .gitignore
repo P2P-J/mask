@@ -45,3 +45,7 @@ Thumbs.db
 # MediaPipe model assets (large binaries — document download in README instead)
 # Uncomment if models are not committed:
 # *.task
+
+# Bootstrapped binary assets (regenerable via scripts/bootstrap-assets.mjs)
+/public/wasm/
+/public/models/
