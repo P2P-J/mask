@@ -1,46 +1,81 @@
 import * as camera from "./camera";
 import { Tracker } from "./tracker";
-import { Renderer } from "./renderer";
+import { Pipeline } from "./gl/pipeline";
+import { MeshOverlay } from "./ui/overlay";
 import { FpsMeter, LatencyMeter } from "./metrics";
-import { Controls } from "./ui/controls";
-import { Panel } from "./ui/panel";
+import { Store } from "./state/store";
+import { getActiveScene } from "./state/reducer";
+import { LAYER_ORDER } from "./state/defaults";
+import { DockControls } from "./ui/dockControls";
+import { ScenesDock } from "./ui/scenes";
+import { LayersDock } from "./ui/layers";
+import { EditorDock } from "./ui/editor";
 
-const canvas = document.getElementById("canvas") as HTMLCanvasElement;
+const glCanvas = document.getElementById("gl-canvas") as HTMLCanvasElement;
+const overlayCanvas = document.getElementById("overlay-canvas") as HTMLCanvasElement;
 const tracker = new Tracker();
-const renderer = new Renderer(canvas);
+const pipeline = new Pipeline(glCanvas);
+const overlay = new MeshOverlay(overlayCanvas);
 const fpsMeter = new FpsMeter(0.1);
 const latencyMeter = new LatencyMeter(0.1);
 const frameMeter = new LatencyMeter(0.1);
+const store = new Store();
 
 let current: camera.CameraInfo | null = null;
 let running = false;
 let requestedLabel = "";
-let lastFrameTime = 0; // 루프를 카메라 fps로 제한(고주사율 모니터에서 불필요한 추론 과구동 방지)
+let lastFrameTime = 0;
+let correctionOn = true; // 보정 On/Off
+let showOriginal = false; // Before/After: true면 원본
 
-const controls = new Controls({
+const controls = new DockControls({
   onSourceChange: () => void restart(),
+  onToggleCorrection: (on) => (correctionOn = on),
+  onBeforeAfter: (orig) => (showOriginal = orig),
+  onPanic: () => {
+    correctionOn = false;
+    showToast("패닉: 원본 패스스루");
+  },
 });
-new Panel();
+new ScenesDock(store);
+new LayersDock(store);
+new EditorDock(store);
+
+function showToast(msg: string): void {
+  const el = document.getElementById("toast") as HTMLElement;
+  el.textContent = msg;
+  el.classList.add("show");
+  window.setTimeout(() => el.classList.remove("show"), 1600);
+}
 
 async function restart(): Promise<void> {
-  current = null; // 새 스트림 준비까지 루프 정지(stale 프레임 방지)
+  current = null;
   try {
     const { width, height } = controls.resolution;
     const fps = controls.fps;
     requestedLabel = `${width}x${height} @${fps}`;
     current = await camera.start({ deviceId: controls.deviceId, width, height, fps });
-    renderer.resize(current.actualWidth, current.actualHeight);
+    pipeline.resize(current.actualWidth, current.actualHeight);
+    overlay.resize(current.actualWidth, current.actualHeight);
     controls.clearError();
   } catch (e) {
     controls.showError("카메라 시작 실패: " + (e as Error).message);
   }
 }
 
+// 활성 장면의 enabled 레이어를 고정 순서로
+function activeLayers() {
+  const scene = getActiveScene(store.get());
+  const byId = new Map(scene.layers.map((l) => [l.id, l]));
+  const ordered = LAYER_ORDER.map((id) => byId.get(id)).filter((l): l is NonNullable<typeof l> => !!l);
+  if (!correctionOn || showOriginal) return ordered.map((l) => ({ ...l, enabled: false }));
+  return ordered;
+}
+
 function loop(): void {
   if (running && current) {
     const now = performance.now();
-    // 모니터 주사율(예: 180Hz)이 아니라 카메라 fps로 작업 빈도 제한
-    const targetFps = current.actualFps || controls.fps;
+    const targetFps = controls.fps; // 선택 fps로 제한
     if (now - lastFrameTime < 1000 / targetFps - 2) {
       requestAnimationFrame(loop);
       return;
@@ -52,7 +87,8 @@ function loop(): void {
       const { faces, inferenceMs } = tracker.detect(current.video, frameStart);
       faceDetected = faces.length > 0;
       latencyMeter.record(inferenceMs);
-      renderer.draw(current.video, faces, controls.overlayEnabled);
+      pipeline.render(current.video, activeLayers());
+      overlay.draw(faces, controls.overlayEnabled);
     } catch (e) {
       controls.showError("추론/렌더 오류: " + (e as Error).message);
     }
@@ -75,7 +111,7 @@ function loop(): void {
 async function main(): Promise<void> {
   try {
     await tracker.init();
-    await restart(); // 권한 획득 → 장치 라벨 채우기 위해 먼저 시작
+    await restart();
     controls.setDevices(await camera.listDevices());
     running = true;
     requestAnimationFrame(loop);
