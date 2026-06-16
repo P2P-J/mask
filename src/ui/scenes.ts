@@ -20,13 +20,22 @@ export class ScenesDock {
     s.scenes.forEach((scene) => {
       const row = document.createElement("div");
       row.className = "row scene-row" + (scene.id === s.activeSceneId ? " active" : "");
-      row.textContent = scene.name;
-      row.title = "더블클릭하여 이름 변경";
-      row.addEventListener("click", () => this.store.update((st) => switchScene(st, scene.id)));
-      row.addEventListener("dblclick", (e) => {
-        e.stopPropagation();
+
+      const name = document.createElement("span");
+      name.className = "scene-name";
+      name.textContent = scene.name;
+
+      const edit = document.createElement("button");
+      edit.className = "scene-edit";
+      edit.textContent = "✎";
+      edit.title = "이름 변경";
+      edit.addEventListener("click", (e) => {
+        e.stopPropagation(); // 행 클릭(장면 전환) 방지
         this.startRename(row, scene.id, scene.name);
       });
+
+      row.append(name, edit);
+      row.addEventListener("click", () => this.store.update((st) => switchScene(st, scene.id)));
       this.listEl.appendChild(row);
     });
   }
@@ -46,7 +55,7 @@ export class ScenesDock {
       if (done) return;
       done = true;
       const name = input.value.trim() || current;
-      this.store.update((st) => renameScene(st, id, name)); // → render() 재호출로 input 제거
+      this.store.update((st) => renameScene(st, id, name)); // → render()로 input 제거
     };
     input.addEventListener("keydown", (e) => {
       if (e.key === "Enter") {

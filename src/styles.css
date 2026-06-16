@@ -58,6 +58,10 @@ body {
 .row .name { flex: 1; }
 .row.soon { opacity: .5; }
 .scene-row.active { background: #fff; box-shadow: 0 1px 4px rgba(232,137,107,.15); font-weight: 700; color: var(--primary-strong); }
+.scene-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.scene-edit { border: none; background: transparent; color: var(--text-muted); cursor: pointer; font-size: 12px; padding: 0 2px; opacity: .55; }
+.scene-row:hover .scene-edit { opacity: 1; }
+.scene-edit:hover { color: var(--primary-strong); }
 .scene-rename { width: 100%; box-sizing: border-box; padding: 7px 8px; border: 1px solid var(--primary); border-radius: 8px; font-size: 12px; color: var(--text-strong); outline: none; }
 
 /* 편집 슬라이더 */
