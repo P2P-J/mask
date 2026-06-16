@@ -15,6 +15,7 @@ const frameMeter = new LatencyMeter(0.1);
 let current: camera.CameraInfo | null = null;
 let running = false;
 let requestedLabel = "";
+let lastFrameTime = 0; // 루프를 카메라 fps로 제한(고주사율 모니터에서 불필요한 추론 과구동 방지)
 
 const controls = new Controls({
   onSourceChange: () => void restart(),
@@ -37,7 +38,15 @@ async function restart(): Promise<void> {
 
 function loop(): void {
   if (running && current) {
-    const frameStart = performance.now();
+    const now = performance.now();
+    // 모니터 주사율(예: 180Hz)이 아니라 카메라 fps로 작업 빈도 제한
+    const targetFps = current.actualFps || controls.fps;
+    if (now - lastFrameTime < 1000 / targetFps - 2) {
+      requestAnimationFrame(loop);
+      return;
+    }
+    lastFrameTime = now;
+    const frameStart = now;
     let faceDetected = false;
     try {
       const { faces, inferenceMs } = tracker.detect(current.video, frameStart);
