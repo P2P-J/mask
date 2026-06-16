@@ -32,6 +32,15 @@ export class Pipeline {
     this.h = h;
     this.gl.canvas.width = w;
     this.gl.canvas.height = h;
+    // 이전 렌더타깃 해제(해상도 변경 반복 시 GL 객체 누수 방지)
+    if (this.a) {
+      this.gl.deleteFramebuffer(this.a.fbo);
+      this.gl.deleteTexture(this.a.tex);
+    }
+    if (this.b) {
+      this.gl.deleteFramebuffer(this.b.fbo);
+      this.gl.deleteTexture(this.b.tex);
+    }
     this.a = createRenderTarget(this.gl, w, h);
     this.b = createRenderTarget(this.gl, w, h);
   }
@@ -72,7 +81,6 @@ export class Pipeline {
   }
 
   private blitPassthrough(tex: WebGLTexture): void {
-    // passes.smoothing가 패스스루 프로그램을 들고 있으므로 재사용
-    this.passes.smoothing.use(this.gl, tex, {});
+    this.passes.passthrough.use(this.gl, tex, {});
   }
 }

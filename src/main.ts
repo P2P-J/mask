@@ -34,6 +34,7 @@ const controls = new DockControls({
   onBeforeAfter: (orig) => (showOriginal = orig),
   onPanic: () => {
     correctionOn = false;
+    controls.setCorrection(false);
     showToast("패닉: 원본 패스스루");
   },
 });

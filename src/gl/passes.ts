@@ -36,31 +36,41 @@ export function createPasses(gl: WebGL2RenderingContext): Record<string, Pass> {
   const passthroughProg = compileProgram(gl, FULLSCREEN_VS, PASSTHROUGH_FS);
   const colorProg = compileProgram(gl, FULLSCREEN_VS, COLOR_FS);
 
-  const bindInput = (prog: WebGLProgram, tex: WebGLTexture) => {
-    gl.useProgram(prog);
+  // 유니폼 위치는 프로그램 생성 시 1회만 조회(매 프레임 조회 방지)
+  const uPassTex = gl.getUniformLocation(passthroughProg, "u_tex");
+  const uColor = {
+    tex: gl.getUniformLocation(colorProg, "u_tex"),
+    brightness: gl.getUniformLocation(colorProg, "u_brightness"),
+    contrast: gl.getUniformLocation(colorProg, "u_contrast"),
+    tone: gl.getUniformLocation(colorProg, "u_tone"),
+    white: gl.getUniformLocation(colorProg, "u_white"),
+  };
+
+  const drawPassthrough = (tex: WebGLTexture): void => {
+    gl.useProgram(passthroughProg);
     gl.activeTexture(gl.TEXTURE0);
     gl.bindTexture(gl.TEXTURE_2D, tex);
-    gl.uniform1i(gl.getUniformLocation(prog, "u_tex"), 0);
+    gl.uniform1i(uPassTex, 0);
+    gl.drawArrays(gl.TRIANGLES, 0, 3);
   };
 
   return {
+    // 보정 없음/스무딩 자리표시 공용 패스스루
+    passthrough: { id: "passthrough", use: (_g, tex) => drawPassthrough(tex) },
     // 스무딩: Plan A에서는 패스스루(자리표시), Plan B에서 FabSoften으로 교체
-    smoothing: {
-      id: "smoothing",
-      use(gl, inputTex) {
-        bindInput(passthroughProg, inputTex);
-        gl.drawArrays(gl.TRIANGLES, 0, 3);
-      },
-    },
+    smoothing: { id: "smoothing", use: (_g, tex) => drawPassthrough(tex) },
     color: {
       id: "color",
-      use(gl, inputTex, params) {
-        bindInput(colorProg, inputTex);
+      use(_g, tex, params) {
+        gl.useProgram(colorProg);
+        gl.activeTexture(gl.TEXTURE0);
+        gl.bindTexture(gl.TEXTURE_2D, tex);
+        gl.uniform1i(uColor.tex, 0);
         const u = colorUniforms(params);
-        gl.uniform1f(gl.getUniformLocation(colorProg, "u_brightness"), u.brightness);
-        gl.uniform1f(gl.getUniformLocation(colorProg, "u_contrast"), u.contrast);
-        gl.uniform1f(gl.getUniformLocation(colorProg, "u_tone"), u.tone);
-        gl.uniform1f(gl.getUniformLocation(colorProg, "u_white"), u.white);
+        gl.uniform1f(uColor.brightness, u.brightness);
+        gl.uniform1f(uColor.contrast, u.contrast);
+        gl.uniform1f(uColor.tone, u.tone);
+        gl.uniform1f(uColor.white, u.white);
         gl.drawArrays(gl.TRIANGLES, 0, 3);
       },
     },

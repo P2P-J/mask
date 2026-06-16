@@ -10,6 +10,7 @@ const LABELS: Record<string, string> = {
 export class EditorDock {
   private titleEl = document.getElementById("editor-title") as HTMLElement;
   private bodyEl = document.getElementById("editor-body") as HTMLElement;
+  private suppress = false; // 슬라이더 드래그 중 자기 유발 재렌더 차단(드래그 끊김 방지)
 
   constructor(private store: Store) {
     this.store.subscribe(() => this.render());
@@ -17,6 +18,7 @@ export class EditorDock {
   }
 
   private render(): void {
+    if (this.suppress) return;
     const layer = getSelectedLayer(this.store.get());
     this.titleEl.textContent = `편집 — ${layer.name}`;
     this.bodyEl.innerHTML = "";
@@ -44,7 +46,11 @@ export class EditorDock {
       slider.value = String(layer.params[key]);
       slider.addEventListener("input", () => {
         val.textContent = slider.value;
+        // suppress로 자기 유발 재렌더를 막아 드래그 중 슬라이더 DOM이 파괴되지 않게 함.
+        // store는 갱신되므로 GL 프리뷰는 다음 프레임에 즉시 반영됨.
+        this.suppress = true;
         this.store.update((st) => setParam(st, layer.id, key, Number(slider.value)));
+        this.suppress = false;
       });
       wrap.append(label, slider);
       this.bodyEl.appendChild(wrap);

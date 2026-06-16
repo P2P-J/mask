@@ -31,9 +31,10 @@ export class DockControls {
     this.resolutionEl.addEventListener("change", () => cb.onSourceChange());
     this.fpsEl.addEventListener("change", () => cb.onSourceChange());
     this.diagToggleEl.addEventListener("click", () => this.diagEl.classList.toggle("open"));
+    this.correctionEl.classList.add("active"); // 기본 보정 ON
     this.correctionEl.addEventListener("click", () => {
       this.correctionEl.classList.toggle("active");
-      cb.onToggleCorrection(!this.correctionEl.classList.contains("active"));
+      cb.onToggleCorrection(this.correctionEl.classList.contains("active"));
     });
     this.beforeAfterEl.addEventListener("click", () => {
       this.beforeAfterEl.classList.toggle("active");
@@ -64,6 +65,9 @@ export class DockControls {
       `프레임:  ${s.frameMs.toFixed(1)} ms\n요청:    ${s.requested}\n실제:    ${s.actual}\n` +
       `얼굴:    ${s.faceDetected ? "검출됨" : "없음"}\nJS 힙:   ${s.jsHeapMb !== null ? s.jsHeapMb.toFixed(0) + " MB" : "N/A"}`;
   }
+
+  // 보정 On/Off 버튼 시각 상태를 외부(패닉 등)에서 동기화
+  setCorrection(on: boolean): void { this.correctionEl.classList.toggle("active", on); }
 
   showError(msg: string): void { this.errorEl.textContent = msg; }
   clearError(): void { this.errorEl.textContent = ""; }
