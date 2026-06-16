@@ -34,19 +34,23 @@
       </div>
     </div>
 
+    <div id="docks-splitter" class="h-splitter" title="드래그하여 도크 높이 조절"></div>
     <div id="docks">
       <section class="dock" id="dock-scenes">
-        <header>장면<button id="scene-add" title="현재 보정으로 새 장면">＋</button></header>
+        <header>장면<button id="scene-add" title="새 장면(기본값)">＋</button></header>
         <div class="dock-body" id="scene-list"></div>
       </section>
+      <div class="v-splitter" data-index="0" title="드래그하여 폭 조절"></div>
       <section class="dock" id="dock-layers">
         <header>레이어</header>
         <div class="dock-body" id="layer-list"></div>
       </section>
+      <div class="v-splitter" data-index="1" title="드래그하여 폭 조절"></div>
       <section class="dock" id="dock-editor">
         <header id="editor-title">편집</header>
         <div class="dock-body" id="editor-body"></div>
       </section>
+      <div class="v-splitter" data-index="2" title="드래그하여 폭 조절"></div>
       <section class="dock" id="dock-controls">
         <header>제어</header>
         <div class="dock-body">

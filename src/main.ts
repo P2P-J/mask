@@ -10,6 +10,7 @@ import { DockControls } from "./ui/dockControls";
 import { ScenesDock } from "./ui/scenes";
 import { LayersDock } from "./ui/layers";
 import { EditorDock } from "./ui/editor";
+import { initResizableDocks } from "./ui/resizable";
 
 const glCanvas = document.getElementById("gl-canvas") as HTMLCanvasElement;
 const overlayCanvas = document.getElementById("overlay-canvas") as HTMLCanvasElement;
@@ -41,6 +42,7 @@ const controls = new DockControls({
 new ScenesDock(store);
 new LayersDock(store);
 new EditorDock(store);
+initResizableDocks();
 
 function showToast(msg: string): void {
   const el = document.getElementById("toast") as HTMLElement;

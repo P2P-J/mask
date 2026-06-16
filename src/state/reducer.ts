@@ -1,4 +1,5 @@
 import type { AppState, Layer, Scene } from "./types";
+import { defaultLayers } from "./defaults";
 
 export function getActiveScene(s: AppState): Scene {
   return s.scenes.find((sc) => sc.id === s.activeSceneId) ?? s.scenes[0];
@@ -46,14 +47,15 @@ export function switchScene(s: AppState, sceneId: string): AppState {
 }
 
 let sceneSeq = 1;
+// 새 장면은 현재값 복제가 아니라 완전 기본값으로 생성
 export function addScene(s: AppState, name: string): AppState {
-  const cloneId = `scene-${Date.now()}-${sceneSeq++}`;
-  const cloned: Scene = {
-    id: cloneId,
-    name,
-    layers: getActiveScene(s).layers.map((l) => ({ ...l, params: { ...l.params } })),
-  };
-  return { ...s, scenes: [...s.scenes, cloned], activeSceneId: cloneId };
+  const id = `scene-${Date.now()}-${sceneSeq++}`;
+  const fresh: Scene = { id, name, layers: defaultLayers() };
+  return { ...s, scenes: [...s.scenes, fresh], activeSceneId: id };
+}
+
+export function renameScene(s: AppState, id: string, name: string): AppState {
+  return { ...s, scenes: s.scenes.map((sc) => (sc.id === id ? { ...sc, name } : sc)) };
 }
 
 export function removeScene(s: AppState, sceneId: string): AppState {

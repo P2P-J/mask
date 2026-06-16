@@ -36,11 +36,16 @@ body {
 #stats { white-space: pre; font-family: ui-monospace, monospace; font-size: 12px; color: var(--text-strong); }
 #diagnostics label { display: flex; align-items: center; gap: 6px; font-size: 12px; margin-top: 10px; }
 
+/* 도크 영역/미리보기 사이 가로 스플리터 */
+.h-splitter { flex: 0 0 6px; background: var(--border); cursor: row-resize; }
+.h-splitter:hover { background: var(--secondary); }
+
 /* 하단 도크 */
-#docks { display: flex; height: 220px; border-top: 1px solid var(--border); }
-.dock { flex: 1; border-right: 1px solid var(--border); display: flex; flex-direction: column; min-width: 0; }
-.dock:last-child { border-right: none; }
-#dock-scenes, #dock-controls { max-width: 180px; }
+#docks { display: flex; height: 220px; }
+.dock { flex: 1 1 0; display: flex; flex-direction: column; min-width: 120px; overflow: hidden; }
+/* 도크 사이 세로 스플리터 */
+.v-splitter { flex: 0 0 6px; background: var(--border); cursor: col-resize; }
+.v-splitter:hover { background: var(--secondary); }
 .dock > header { background: var(--rail); padding: 7px 12px; font-size: 11px; font-weight: 700; color: #9c7d72; display: flex; justify-content: space-between; align-items: center; }
 .dock > header button { border: none; background: transparent; color: var(--primary-strong); font-size: 14px; cursor: pointer; }
 .dock-body { padding: 8px; overflow-y: auto; flex: 1; }
@@ -53,6 +58,7 @@ body {
 .row .name { flex: 1; }
 .row.soon { opacity: .5; }
 .scene-row.active { background: #fff; box-shadow: 0 1px 4px rgba(232,137,107,.15); font-weight: 700; color: var(--primary-strong); }
+.scene-rename { width: 100%; box-sizing: border-box; padding: 7px 8px; border: 1px solid var(--primary); border-radius: 8px; font-size: 12px; color: var(--text-strong); outline: none; }
 
 /* 편집 슬라이더 */
 .slider-row { margin-bottom: 12px; }

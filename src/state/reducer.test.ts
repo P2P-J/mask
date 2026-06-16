@@ -8,6 +8,7 @@ import {
   selectLayer,
   switchScene,
   addScene,
+  renameScene,
 } from "./reducer";
 
 describe("reducer", () => {
@@ -31,15 +32,23 @@ describe("reducer", () => {
     expect(getSelectedLayer(s1).id).toBe("color");
   });
 
-  it("addScene은 현재 장면 보정값을 복제한 새 장면을 활성화", () => {
+  it("addScene은 기본값으로 새 장면을 추가·활성화(복제 아님)", () => {
     let s = setParam(defaultState(), "color", "brightness", 80);
     s = addScene(s, "장면 2");
     expect(s.scenes.length).toBe(2);
     expect(s.activeSceneId).not.toBe("scene-1");
-    expect(getActiveScene(s).layers.find((l) => l.id === "color")!.params.brightness).toBe(80);
-    // 새 장면 편집이 원래 장면에 영향 없음
-    const s2 = setParam(s, "color", "brightness", 10);
-    expect(s2.scenes[0].layers.find((l) => l.id === "color")!.params.brightness).toBe(80);
+    // 새 장면은 기본값(50) — 원래 장면의 80을 복제하지 않음
+    expect(getActiveScene(s).layers.find((l) => l.id === "color")!.params.brightness).toBe(50);
+    // 원래 장면은 그대로 80
+    expect(s.scenes[0].layers.find((l) => l.id === "color")!.params.brightness).toBe(80);
+  });
+
+  it("renameScene은 해당 장면 이름만 변경", () => {
+    let s = addScene(defaultState(), "장면 2");
+    const id = s.activeSceneId;
+    s = renameScene(s, id, "방송용");
+    expect(s.scenes.find((sc) => sc.id === id)!.name).toBe("방송용");
+    expect(s.scenes[0].name).toBe("장면 1"); // 다른 장면 영향 없음
   });
 
   it("switchScene은 활성 장면 변경", () => {
