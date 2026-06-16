@@ -42,6 +42,9 @@ Thumbs.db
 # Claude Code local settings
 .claude/settings.local.json
 
+# Superpowers brainstorm/visual-companion artifacts
+.superpowers/
+
 # MediaPipe model assets (large binaries — document download in README instead)
 # Uncomment if models are not committed:
 # *.task
