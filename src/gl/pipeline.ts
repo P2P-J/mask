@@ -48,10 +48,9 @@ export class Pipeline {
     gl.bindTexture(gl.TEXTURE_2D, this.videoTex);
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, video);
 
-    gl.bindVertexArray(this.vao);
-
     const enabled = layers.filter((l) => l.enabled && this.passes[l.id]);
     if (enabled.length === 0) {
+      gl.bindVertexArray(this.vao);
       this.passes.passthrough.render(this.videoTex, null, {}, landmarks);
       gl.bindVertexArray(null);
       return;
@@ -62,6 +61,7 @@ export class Pipeline {
     let dst = this.b;
     enabled.forEach((layer, i) => {
       const last = i === enabled.length - 1;
+      gl.bindVertexArray(this.vao); // 각 패스 전 풀스크린 VAO 보장(스무딩이 내부 VAO를 바꿔도 안전)
       this.passes[layer.id].render(input, last ? null : dst.fbo, layer.params, landmarks);
       if (!last) {
         input = dst.tex;
