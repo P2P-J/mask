@@ -3,6 +3,7 @@ import { Tracker } from "./tracker";
 import { Renderer } from "./renderer";
 import { FpsMeter, LatencyMeter } from "./metrics";
 import { Controls } from "./ui/controls";
+import { Panel } from "./ui/panel";
 
 const canvas = document.getElementById("canvas") as HTMLCanvasElement;
 const tracker = new Tracker();
@@ -18,6 +19,7 @@ let requestedLabel = "";
 const controls = new Controls({
   onSourceChange: () => void restart(),
 });
+new Panel();
 
 async function restart(): Promise<void> {
   current = null; // 새 스트림 준비까지 루프 정지(stale 프레임 방지)
