@@ -4,18 +4,17 @@ import {
   createRenderTarget,
   type RenderTarget,
 } from "./glUtils";
-import { createPasses, type Pass } from "./passes";
+import { createPasses, type FxPass } from "./passes";
 import type { Layer } from "../state/types";
+import type { NormalizedLandmark } from "@mediapipe/tasks-vision";
 
 export class Pipeline {
   private gl: WebGL2RenderingContext;
   private vao: WebGLVertexArrayObject;
   private videoTex: WebGLTexture;
-  private passes: Record<string, Pass>;
+  private passes: Record<string, FxPass>;
   private a: RenderTarget | null = null;
   private b: RenderTarget | null = null;
-  private w = 0;
-  private h = 0;
 
   constructor(canvas: HTMLCanvasElement) {
     const gl = canvas.getContext("webgl2", { premultipliedAlpha: false });
@@ -24,15 +23,12 @@ export class Pipeline {
     this.vao = createFullscreenVAO(gl);
     this.videoTex = createTexture(gl);
     this.passes = createPasses(gl);
-    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true); // 비디오 상하 반전 보정
+    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
   }
 
   resize(w: number, h: number): void {
-    this.w = w;
-    this.h = h;
     this.gl.canvas.width = w;
     this.gl.canvas.height = h;
-    // 이전 렌더타깃 해제(해상도 변경 반복 시 GL 객체 누수 방지)
     if (this.a) {
       this.gl.deleteFramebuffer(this.a.fbo);
       this.gl.deleteTexture(this.a.tex);
@@ -43,24 +39,20 @@ export class Pipeline {
     }
     this.a = createRenderTarget(this.gl, w, h);
     this.b = createRenderTarget(this.gl, w, h);
+    for (const p of Object.values(this.passes)) p.resize(w, h);
   }
 
-  // 활성 enabled 레이어(고정 순서 정렬된 배열)를 순서대로 적용
-  render(video: HTMLVideoElement, layers: Layer[]): void {
+  render(video: HTMLVideoElement, layers: Layer[], landmarks: NormalizedLandmark[] | null): void {
     const gl = this.gl;
     if (!this.a || !this.b) return;
-    // 1) 비디오 → videoTex
     gl.bindTexture(gl.TEXTURE_2D, this.videoTex);
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, video);
 
     gl.bindVertexArray(this.vao);
-    gl.viewport(0, 0, this.w, this.h);
 
     const enabled = layers.filter((l) => l.enabled && this.passes[l.id]);
     if (enabled.length === 0) {
-      // 보정 없음: 비디오 그대로 캔버스로
-      gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-      this.blitPassthrough(this.videoTex);
+      this.passes.passthrough.render(this.videoTex, null, {}, landmarks);
       gl.bindVertexArray(null);
       return;
     }
@@ -70,17 +62,12 @@ export class Pipeline {
     let dst = this.b;
     enabled.forEach((layer, i) => {
       const last = i === enabled.length - 1;
-      gl.bindFramebuffer(gl.FRAMEBUFFER, last ? null : dst.fbo);
-      this.passes[layer.id].use(gl, input, layer.params);
+      this.passes[layer.id].render(input, last ? null : dst.fbo, layer.params, landmarks);
       if (!last) {
         input = dst.tex;
         [src, dst] = [dst, src];
       }
     });
     gl.bindVertexArray(null);
-  }
-
-  private blitPassthrough(tex: WebGLTexture): void {
-    this.passes.passthrough.use(this.gl, tex, {});
   }
 }

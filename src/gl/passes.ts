@@ -1,10 +1,18 @@
 import { compileProgram, FULLSCREEN_VS } from "./glUtils";
 import { colorUniforms } from "./mapping";
+import type { NormalizedLandmark } from "@mediapipe/tasks-vision";
 
-// 각 패스: 입력 텍스처 + params로 현재 바인딩된 FBO에 풀스크린 렌더
-export interface Pass {
+// 패스: 입력 텍스처 → target(FBO 또는 null=캔버스)에 결과 렌더.
+// 내부 FBO가 필요한 패스(스무딩)를 위해 resize/target/landmarks를 받는다.
+export interface FxPass {
   id: string;
-  use(gl: WebGL2RenderingContext, inputTex: WebGLTexture, params: Record<string, number>): void;
+  resize(w: number, h: number): void;
+  render(
+    input: WebGLTexture,
+    target: WebGLFramebuffer | null,
+    params: Record<string, number>,
+    landmarks: NormalizedLandmark[] | null
+  ): void;
 }
 
 const PASSTHROUGH_FS = `#version 300 es
@@ -32,47 +40,87 @@ void main(){
   o = vec4(clamp(c, 0.0, 1.0), 1.0);
 }`;
 
-export function createPasses(gl: WebGL2RenderingContext): Record<string, Pass> {
-  const passthroughProg = compileProgram(gl, FULLSCREEN_VS, PASSTHROUGH_FS);
-  const colorProg = compileProgram(gl, FULLSCREEN_VS, COLOR_FS);
+// 풀스크린 패스 공통: target 바인딩 + 뷰포트 + 프로그램 + 입력 텍스처 바인딩
+function beginPass(
+  gl: WebGL2RenderingContext,
+  prog: WebGLProgram,
+  uTex: WebGLUniformLocation | null,
+  input: WebGLTexture,
+  target: WebGLFramebuffer | null,
+  w: number,
+  h: number
+): void {
+  gl.bindFramebuffer(gl.FRAMEBUFFER, target);
+  gl.viewport(0, 0, w, h);
+  gl.useProgram(prog);
+  gl.activeTexture(gl.TEXTURE0);
+  gl.bindTexture(gl.TEXTURE_2D, input);
+  gl.uniform1i(uTex, 0);
+}
 
-  // 유니폼 위치는 프로그램 생성 시 1회만 조회(매 프레임 조회 방지)
-  const uPassTex = gl.getUniformLocation(passthroughProg, "u_tex");
-  const uColor = {
-    tex: gl.getUniformLocation(colorProg, "u_tex"),
-    brightness: gl.getUniformLocation(colorProg, "u_brightness"),
-    contrast: gl.getUniformLocation(colorProg, "u_contrast"),
-    tone: gl.getUniformLocation(colorProg, "u_tone"),
-    white: gl.getUniformLocation(colorProg, "u_white"),
+export class PassthroughPass implements FxPass {
+  id = "passthrough";
+  private prog: WebGLProgram;
+  private uTex: WebGLUniformLocation | null;
+  private w = 0;
+  private h = 0;
+  constructor(private gl: WebGL2RenderingContext) {
+    this.prog = compileProgram(gl, FULLSCREEN_VS, PASSTHROUGH_FS);
+    this.uTex = gl.getUniformLocation(this.prog, "u_tex");
+  }
+  resize(w: number, h: number): void {
+    this.w = w;
+    this.h = h;
+  }
+  render(input: WebGLTexture, target: WebGLFramebuffer | null): void {
+    beginPass(this.gl, this.prog, this.uTex, input, target, this.w, this.h);
+    this.gl.drawArrays(this.gl.TRIANGLES, 0, 3);
+  }
+}
+
+export class ColorPass implements FxPass {
+  id = "color";
+  private prog: WebGLProgram;
+  private u: {
+    tex: WebGLUniformLocation | null;
+    brightness: WebGLUniformLocation | null;
+    contrast: WebGLUniformLocation | null;
+    tone: WebGLUniformLocation | null;
+    white: WebGLUniformLocation | null;
   };
-
-  const drawPassthrough = (tex: WebGLTexture): void => {
-    gl.useProgram(passthroughProg);
-    gl.activeTexture(gl.TEXTURE0);
-    gl.bindTexture(gl.TEXTURE_2D, tex);
-    gl.uniform1i(uPassTex, 0);
+  private w = 0;
+  private h = 0;
+  constructor(private gl: WebGL2RenderingContext) {
+    this.prog = compileProgram(gl, FULLSCREEN_VS, COLOR_FS);
+    this.u = {
+      tex: gl.getUniformLocation(this.prog, "u_tex"),
+      brightness: gl.getUniformLocation(this.prog, "u_brightness"),
+      contrast: gl.getUniformLocation(this.prog, "u_contrast"),
+      tone: gl.getUniformLocation(this.prog, "u_tone"),
+      white: gl.getUniformLocation(this.prog, "u_white"),
+    };
+  }
+  resize(w: number, h: number): void {
+    this.w = w;
+    this.h = h;
+  }
+  render(input: WebGLTexture, target: WebGLFramebuffer | null, params: Record<string, number>): void {
+    const gl = this.gl;
+    beginPass(gl, this.prog, this.u.tex, input, target, this.w, this.h);
+    const c = colorUniforms(params);
+    gl.uniform1f(this.u.brightness, c.brightness);
+    gl.uniform1f(this.u.contrast, c.contrast);
+    gl.uniform1f(this.u.tone, c.tone);
+    gl.uniform1f(this.u.white, c.white);
     gl.drawArrays(gl.TRIANGLES, 0, 3);
-  };
+  }
+}
 
+// Plan B Task 3에서 smoothing을 실제 SmoothingPass로 교체. 지금은 패스스루.
+export function createPasses(gl: WebGL2RenderingContext): Record<string, FxPass> {
   return {
-    // 보정 없음/스무딩 자리표시 공용 패스스루
-    passthrough: { id: "passthrough", use: (_g, tex) => drawPassthrough(tex) },
-    // 스무딩: Plan A에서는 패스스루(자리표시), Plan B에서 FabSoften으로 교체
-    smoothing: { id: "smoothing", use: (_g, tex) => drawPassthrough(tex) },
-    color: {
-      id: "color",
-      use(_g, tex, params) {
-        gl.useProgram(colorProg);
-        gl.activeTexture(gl.TEXTURE0);
-        gl.bindTexture(gl.TEXTURE_2D, tex);
-        gl.uniform1i(uColor.tex, 0);
-        const u = colorUniforms(params);
-        gl.uniform1f(uColor.brightness, u.brightness);
-        gl.uniform1f(uColor.contrast, u.contrast);
-        gl.uniform1f(uColor.tone, u.tone);
-        gl.uniform1f(uColor.white, u.white);
-        gl.drawArrays(gl.TRIANGLES, 0, 3);
-      },
-    },
+    passthrough: new PassthroughPass(gl),
+    smoothing: new PassthroughPass(gl),
+    color: new ColorPass(gl),
   };
 }

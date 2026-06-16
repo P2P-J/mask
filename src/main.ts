@@ -90,7 +90,7 @@ function loop(): void {
       const { faces, inferenceMs } = tracker.detect(current.video, frameStart);
       faceDetected = faces.length > 0;
       latencyMeter.record(inferenceMs);
-      pipeline.render(current.video, activeLayers());
+      pipeline.render(current.video, activeLayers(), faces[0] ?? null);
       overlay.draw(faces, controls.overlayEnabled);
     } catch (e) {
       controls.showError("추론/렌더 오류: " + (e as Error).message);
