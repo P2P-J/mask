@@ -3,41 +3,86 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Mask PoC — 성능 검증</title>
-    <style>
-      body { margin: 0; font-family: system-ui, sans-serif; background: #111; color: #eee; }
-      #app { display: flex; gap: 12px; padding: 12px; }
-      #stage { position: relative; }
-      canvas { background: #000; max-width: 100%; height: auto; }
-      #controls { display: flex; flex-direction: column; gap: 8px; min-width: 240px; }
-      #stats { white-space: pre; font-family: monospace; font-size: 13px; background: #1c1c1c; padding: 10px; border-radius: 6px; }
-      label { display: flex; justify-content: space-between; gap: 8px; align-items: center; }
-      select, input { padding: 4px; }
-      #error { color: #ff6b6b; font-size: 13px; }
-    </style>
+    <title>Mask</title>
+    <link rel="stylesheet" href="/src/styles.css" />
   </head>
   <body>
-    <div id="app">
-      <div id="stage"><canvas id="canvas"></canvas></div>
-      <div id="controls">
-        <label>카메라 <select id="device"></select></label>
-        <label>해상도
-          <select id="resolution">
-            <option value="1280x720">720p</option>
-            <option value="1920x1080" selected>1080p</option>
-          </select>
-        </label>
-        <label>FPS
-          <select id="fps">
-            <option value="30" selected>30</option>
-            <option value="60">60</option>
-          </select>
-        </label>
-        <label>메시 오버레이 <input type="checkbox" id="overlay" checked /></label>
-        <div id="stats">초기화 중…</div>
-        <div id="error"></div>
+    <!-- 상단바 -->
+    <div id="topbar">
+      <div class="brand"><span class="dot"></span> Mask</div>
+      <div class="group">
+        <select id="device" class="tds-select"></select>
+        <select id="resolution" class="tds-select">
+          <option value="1280x720">720p</option>
+          <option value="1920x1080" selected>1080p</option>
+        </select>
+        <select id="fps" class="tds-select">
+          <option value="30" selected>30fps</option>
+          <option value="60">60fps</option>
+        </select>
+        <button id="diag-toggle" class="tds-toggle-btn">진단 ▾</button>
       </div>
     </div>
+
+    <!-- 본문 3열 -->
+    <div id="layout">
+      <!-- 좌측 대분류 레일 -->
+      <div id="rail">
+        <button class="rail-item active" data-cat="face"><span class="ic"></span>얼굴</button>
+        <button class="rail-item soon" data-cat="body"><span class="ic"></span>몸매</button>
+        <button class="rail-item soon" data-cat="filter"><span class="ic"></span>필터</button>
+        <button class="rail-item soon" data-cat="makeup"><span class="ic"></span>화장</button>
+        <button class="rail-item soon" data-cat="bg"><span class="ic"></span>배경</button>
+        <div class="rail-add">+</div>
+      </div>
+
+      <!-- 중앙 프리뷰(필수) -->
+      <div id="stage">
+        <canvas id="canvas"></canvas>
+        <div class="live-badge"><span class="live-dot"></span><span id="live-fps">— fps</span></div>
+        <div id="error"></div>
+        <!-- 접이식 진단 패널 -->
+        <div id="diagnostics">
+          <div id="stats">초기화 중…</div>
+          <label><input type="checkbox" id="overlay" checked /> 메시 오버레이</label>
+        </div>
+      </div>
+
+      <!-- 우측 보정 패널 -->
+      <div id="panel">
+        <div class="panel-title">얼굴 보정</div>
+        <div class="tabs">
+          <button class="tab active" data-tab="skin">피부</button>
+          <button class="tab" data-tab="color">색보정</button>
+          <button class="tab soon" data-tab="shape">윤곽</button>
+          <button class="tab soon" data-tab="bg">배경</button>
+        </div>
+
+        <div class="slider-group active" id="tab-skin">
+          <div class="slider-row"><div class="label"><span>스무딩</span><b>45</b></div><input type="range" min="0" max="100" value="45" /></div>
+          <div class="slider-row"><div class="label"><span>질감 보존</span><b>70</b></div><input type="range" min="0" max="100" value="70" /></div>
+          <div class="slider-row"><div class="label"><span>잡티 제거</span><b>20</b></div><input type="range" min="0" max="100" value="20" /></div>
+          <div class="slider-row"><div class="label"><span>자동 노출</span><b>60</b></div><input type="range" min="0" max="100" value="60" /></div>
+        </div>
+
+        <div class="slider-group" id="tab-color">
+          <div class="slider-row"><div class="label"><span>밝기</span><b>50</b></div><input type="range" min="0" max="100" value="50" /></div>
+          <div class="slider-row"><div class="label"><span>대비</span><b>50</b></div><input type="range" min="0" max="100" value="50" /></div>
+          <div class="slider-row"><div class="label"><span>톤</span><b>50</b></div><input type="range" min="0" max="100" value="50" /></div>
+          <div class="slider-row"><div class="label"><span>화이트밸런스</span><b>50</b></div><input type="range" min="0" max="100" value="50" /></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 하단 CTA -->
+    <div id="bottom">
+      <button class="cta primary" id="vcam" disabled>● 가상캠 시작 (준비 중)</button>
+      <button class="cta ghost" id="toggle-correction">보정 On/Off</button>
+      <button class="cta ghost" id="before-after">Before/After</button>
+      <button class="cta ghost" id="panic">패닉</button>
+    </div>
+
+    <div id="toast"></div>
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>
