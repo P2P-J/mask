@@ -5,6 +5,9 @@ import { getSelectedLayer, setParam } from "../state/reducer";
 const LABELS: Record<string, string> = {
   strength: "강도", texture: "질감 보존",
   brightness: "밝기", contrast: "대비", tone: "톤", white: "화이트밸런스",
+  saturation: "채도", warmth: "따뜻함",
+  whiten: "화이트닝",
+  slim: "얼굴 슬림", headSize: "머리 크기",
 };
 
 export class EditorDock {

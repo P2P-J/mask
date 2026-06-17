@@ -31,11 +31,16 @@ uniform float u_brightness;
 uniform float u_contrast;
 uniform float u_tone;
 uniform float u_white;
+uniform float u_saturation;
+uniform float u_warmth;
 out vec4 o;
 void main(){
   vec3 c = texture(u_tex, v_uv).rgb;
   c += u_brightness;
   c = (c - 0.5) * u_contrast + 0.5;
+  float l = dot(c, vec3(0.299, 0.587, 0.114));
+  c = mix(vec3(l), c, u_saturation);            // 채도
+  c.r += u_warmth * 0.08; c.b -= u_warmth * 0.08; // 따뜻함
   c.r += u_tone * 0.06; c.b -= u_tone * 0.06;
   c.r += u_white * 0.04; c.b += u_white * 0.04;
   o = vec4(clamp(c, 0.0, 1.0), 1.0);
@@ -88,6 +93,8 @@ export class ColorPass implements FxPass {
     contrast: WebGLUniformLocation | null;
     tone: WebGLUniformLocation | null;
     white: WebGLUniformLocation | null;
+    saturation: WebGLUniformLocation | null;
+    warmth: WebGLUniformLocation | null;
   };
   private w = 0;
   private h = 0;
@@ -99,6 +106,8 @@ export class ColorPass implements FxPass {
       contrast: gl.getUniformLocation(this.prog, "u_contrast"),
       tone: gl.getUniformLocation(this.prog, "u_tone"),
       white: gl.getUniformLocation(this.prog, "u_white"),
+      saturation: gl.getUniformLocation(this.prog, "u_saturation"),
+      warmth: gl.getUniformLocation(this.prog, "u_warmth"),
     };
   }
   resize(w: number, h: number): void {
@@ -113,6 +122,8 @@ export class ColorPass implements FxPass {
     gl.uniform1f(this.u.contrast, c.contrast);
     gl.uniform1f(this.u.tone, c.tone);
     gl.uniform1f(this.u.white, c.white);
+    gl.uniform1f(this.u.saturation, c.saturation);
+    gl.uniform1f(this.u.warmth, c.warmth);
     gl.drawArrays(gl.TRIANGLES, 0, 3);
   }
 }

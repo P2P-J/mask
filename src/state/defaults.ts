@@ -14,7 +14,7 @@ export function defaultLayers(): Layer[] {
       name: "색보정",
       category: "face",
       enabled: false,
-      params: { brightness: 50, contrast: 50, tone: 50, white: 50 },
+      params: { brightness: 50, contrast: 50, tone: 50, white: 50, saturation: 50, warmth: 50 },
     },
   ];
 }
