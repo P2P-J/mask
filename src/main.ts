@@ -11,6 +11,7 @@ import { ScenesDock } from "./ui/scenes";
 import { LayersDock } from "./ui/layers";
 import { EditorDock } from "./ui/editor";
 import { initResizableDocks } from "./ui/resizable";
+import { createCanvasFitter } from "./ui/canvasFit";
 
 const glCanvas = document.getElementById("gl-canvas") as HTMLCanvasElement;
 const overlayCanvas = document.getElementById("overlay-canvas") as HTMLCanvasElement;
@@ -44,6 +45,16 @@ new LayersDock(store);
 new EditorDock(store);
 initResizableDocks();
 
+// 캔버스를 표시 크기×DPR로 렌더(브라우저 축소 모아레 제거 + GPU 부하 감소)
+const fitter = createCanvasFitter(
+  document.getElementById("stage") as HTMLElement,
+  [glCanvas, overlayCanvas],
+  (bw, bh) => {
+    pipeline.resize(bw, bh);
+    overlay.resize(bw, bh);
+  }
+);
+
 function showToast(msg: string): void {
   const el = document.getElementById("toast") as HTMLElement;
   el.textContent = msg;
@@ -58,8 +69,7 @@ async function restart(): Promise<void> {
     const fps = controls.fps;
     requestedLabel = `${width}x${height} @${fps}`;
     current = await camera.start({ deviceId: controls.deviceId, width, height, fps });
-    pipeline.resize(current.actualWidth, current.actualHeight);
-    overlay.resize(current.actualWidth, current.actualHeight);
+    fitter.setAspect(current.actualWidth / current.actualHeight);
     controls.clearError();
   } catch (e) {
     controls.showError("카메라 시작 실패: " + (e as Error).message);
