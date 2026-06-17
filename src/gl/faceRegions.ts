@@ -8,11 +8,14 @@ export const FACE_TRIANGLES = trianglesFromConnections(
 
 // 입술/입 영역(치아 마스크용).
 export const LIPS = regionIndices(FaceLandmarker.FACE_LANDMARKS_LIPS as Connection[]);
+// 눈 영역(눈 밝히기 마스크용).
+export const LEFT_EYE = regionIndices(FaceLandmarker.FACE_LANDMARKS_LEFT_EYE as Connection[]);
+export const RIGHT_EYE = regionIndices(FaceLandmarker.FACE_LANDMARKS_RIGHT_EYE as Connection[]);
 
 // 도려낼 영역(눈/눈썹/입) — 윤곽 루프의 유니크 정점.
 export const HOLES = [
-  regionIndices(FaceLandmarker.FACE_LANDMARKS_LEFT_EYE as Connection[]),
-  regionIndices(FaceLandmarker.FACE_LANDMARKS_RIGHT_EYE as Connection[]),
+  LEFT_EYE,
+  RIGHT_EYE,
   regionIndices(FaceLandmarker.FACE_LANDMARKS_LEFT_EYEBROW as Connection[]),
   regionIndices(FaceLandmarker.FACE_LANDMARKS_RIGHT_EYEBROW as Connection[]),
   LIPS,

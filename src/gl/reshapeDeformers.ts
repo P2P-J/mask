@@ -90,6 +90,9 @@ export function buildDeformers(lm: NormalizedLandmark[], p: Record<string, numbe
     const tilt = bi(p, "eyeCorner") * H * 0.025; // >50 올리기
     add(uv(lm, 33), ew * 1.0, ew * 1.0, 0, 0, 0, +tilt); // 좌 눈꼬리(바깥)
     add(uv(lm, 263), ew * 1.0, ew * 1.0, 0, 0, 0, +tilt); // 우 눈꼬리
+    const pupil = uni(p, "pupil") * 0.5; // 동공/홍채 확대(눈 중심 작은 버블)
+    add(leftEye, ew * 0.55, ew * 0.55, pupil, pupil);
+    add(rightEye, ew * 0.55, ew * 0.55, pupil, pupil);
   }
 
   // ── 코 ──

@@ -10,7 +10,8 @@ const LABELS: Record<string, string> = {
   whiten: "화이트닝",
   slim: "얼굴 갸름", faceSize: "작은 얼굴", cheekbone: "광대 축소", jaw: "V라인 턱",
   chinLength: "턱 길이(±)", forehead: "이마 축소",
-  eyeSize: "눈 크게", eyeSpacing: "눈 간격(±)", eyeCorner: "눈꼬리(±)",
+  eyeSize: "눈 크게", eyeSpacing: "눈 간격(±)", eyeCorner: "눈꼬리(±)", pupil: "동공 확대",
+  eyeBrighten: "눈 밝히기", aegyo: "애교살",
   noseSize: "코 축소", noseBridge: "콧대 슬림", noseTip: "코끝 축소", noseWing: "코볼 축소",
   mouthSize: "입 크기", lipThick: "입술 도톰", smile: "입꼬리(미소)", browHeight: "눈썹 높이",
 };

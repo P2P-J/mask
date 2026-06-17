@@ -4,6 +4,7 @@ import type { NormalizedLandmark } from "@mediapipe/tasks-vision";
 import { SmoothingPass } from "./smoothing";
 import { TeethPass } from "./teeth";
 import { ReshapePass } from "./reshape";
+import { EyeDetailPass } from "./eyeDetail";
 
 // 패스: 입력 텍스처 → target(FBO 또는 null=캔버스)에 결과 렌더.
 // 내부 FBO가 필요한 패스(스무딩)를 위해 resize/target/landmarks를 받는다.
@@ -137,6 +138,7 @@ export function createPasses(gl: WebGL2RenderingContext): Record<string, FxPass>
     smoothing: new SmoothingPass(gl),
     color: new ColorPass(gl),
     teeth: new TeethPass(gl),
+    eyeDetail: new EyeDetailPass(gl),
     reshape: new ReshapePass(gl),
   };
 }

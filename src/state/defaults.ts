@@ -24,13 +24,20 @@ export function defaultLayers(): Layer[] {
       params: { whiten: 60 },
     },
     {
+      id: "eyeDetail",
+      name: "눈",
+      category: "face",
+      enabled: false,
+      params: { eyeBrighten: 0, aegyo: 0 },
+    },
+    {
       id: "reshape",
       name: "윤곽/리쉐이프",
       category: "face",
       enabled: false,
       params: {
         slim: 0, faceSize: 0, cheekbone: 0, jaw: 0, chinLength: 50, forehead: 0,
-        eyeSize: 0, eyeSpacing: 50, eyeCorner: 50,
+        eyeSize: 0, eyeSpacing: 50, eyeCorner: 50, pupil: 0,
         noseSize: 0, noseBridge: 0, noseTip: 0, noseWing: 0,
         mouthSize: 0, lipThick: 0, smile: 0, browHeight: 0,
       },
@@ -38,8 +45,8 @@ export function defaultLayers(): Layer[] {
   ];
 }
 
-// 렌더 순서(고정): 스무딩 → 색보정 → 치아 → 리쉐이프(워프는 마지막)
-export const LAYER_ORDER = ["smoothing", "color", "teeth", "reshape"] as const;
+// 렌더 순서(고정): 스무딩 → 색보정 → 치아 → 눈 → 리쉐이프(워프는 마지막)
+export const LAYER_ORDER = ["smoothing", "color", "teeth", "eyeDetail", "reshape"] as const;
 
 export const CATEGORIES = [
   { id: "face", name: "얼굴", enabled: true },

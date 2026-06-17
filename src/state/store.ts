@@ -2,7 +2,7 @@ import type { AppState } from "./types";
 import { defaultState } from "./defaults";
 import { serialize, deserialize } from "./persist";
 
-const KEY = "mask.state.v5"; // v5: 피부 디테일(잡티/주름·피부톤·밝히기·다크서클)
+const KEY = "mask.state.v6"; // v6: 눈 레이어(눈 밝히기/애교살) + 동공 확대
 type Listener = (s: AppState) => void;
 
 export class Store {
