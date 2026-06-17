@@ -5,6 +5,7 @@ import { SmoothingPass } from "./smoothing";
 import { TeethPass } from "./teeth";
 import { ReshapePass } from "./reshape";
 import { EyeDetailPass } from "./eyeDetail";
+import { MakeupPass } from "./makeup";
 
 // 패스: 입력 텍스처 → target(FBO 또는 null=캔버스)에 결과 렌더.
 // 내부 FBO가 필요한 패스(스무딩)를 위해 resize/target/landmarks를 받는다.
@@ -15,7 +16,8 @@ export interface FxPass {
     input: WebGLTexture,
     target: WebGLFramebuffer | null,
     params: Record<string, number>,
-    landmarks: NormalizedLandmark[] | null
+    landmarks: NormalizedLandmark[] | null,
+    colors?: Record<string, string>
   ): void;
 }
 
@@ -139,6 +141,7 @@ export function createPasses(gl: WebGL2RenderingContext): Record<string, FxPass>
     color: new ColorPass(gl),
     teeth: new TeethPass(gl),
     eyeDetail: new EyeDetailPass(gl),
+    makeup: new MakeupPass(gl),
     reshape: new ReshapePass(gl),
   };
 }

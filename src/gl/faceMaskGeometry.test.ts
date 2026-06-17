@@ -5,6 +5,7 @@ import {
   trianglesFromConnections,
   buildMeshVerts,
   faceCenterRadius,
+  ellipseFan,
 } from "./faceMaskGeometry";
 import type { NormalizedLandmark } from "@mediapipe/tasks-vision";
 
@@ -50,6 +51,13 @@ describe("faceMaskGeometry", () => {
       keys.add([t[i], t[i + 1], t[i + 2]].sort((a, b) => a - b).join("-"));
     }
     expect(keys).toEqual(new Set(["0-1-2", "0-2-3"]));
+  });
+
+  it("ellipseFan: segments개 삼각형(6×segments float), 중심 정점=클립 변환", () => {
+    const f = ellipseFan(0.5, 0.5, 0.1, 0.1, 8);
+    expect(f.length).toBe(8 * 6);
+    expect(f[0]).toBeCloseTo(0); // (0.5)*2-1 = 0
+    expect(f[1]).toBeCloseTo(0);
   });
 
   it("faceCenterRadius: 극점 중점/반경(y 반전)", () => {

@@ -28,6 +28,12 @@ export function setParam(s: AppState, layerId: string, key: string, value: numbe
   );
 }
 
+export function setColor(s: AppState, layerId: string, key: string, hex: string): AppState {
+  return mapActiveScene(s, (scene) =>
+    mapLayer(scene, layerId, (l) => ({ ...l, colors: { ...(l.colors ?? {}), [key]: hex } }))
+  );
+}
+
 export function toggleLayer(s: AppState, layerId: string): AppState {
   return mapActiveScene(s, (scene) =>
     mapLayer(scene, layerId, (l) => ({ ...l, enabled: !l.enabled }))

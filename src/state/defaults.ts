@@ -31,6 +31,14 @@ export function defaultLayers(): Layer[] {
       params: { eyeBrighten: 0, aegyo: 0 },
     },
     {
+      id: "makeup",
+      name: "메이크업",
+      category: "face",
+      enabled: false,
+      params: { lipstick: 0, blush: 0, eyeshadow: 0, eyebrow: 0 },
+      colors: { lipstick: "#c85a64", blush: "#e8918c", eyeshadow: "#a87a6e", eyebrow: "#5a4636" },
+    },
+    {
       id: "reshape",
       name: "윤곽/리쉐이프",
       category: "face",
@@ -46,7 +54,7 @@ export function defaultLayers(): Layer[] {
 }
 
 // 렌더 순서(고정): 스무딩 → 색보정 → 치아 → 눈 → 리쉐이프(워프는 마지막)
-export const LAYER_ORDER = ["smoothing", "color", "teeth", "eyeDetail", "reshape"] as const;
+export const LAYER_ORDER = ["smoothing", "color", "teeth", "eyeDetail", "makeup", "reshape"] as const;
 
 export const CATEGORIES = [
   { id: "face", name: "얼굴", enabled: true },

@@ -41,6 +41,23 @@ export function buildFan(landmarks: NormalizedLandmark[], indices: number[]): Fl
   return new Float32Array(verts);
 }
 
+// 타원 영역을 삼각형 팬(클립공간)으로 생성. center/rad는 uv(y-up). 블러셔·아이섀도 등.
+export function ellipseFan(cx: number, cy: number, rx: number, ry: number, segments = 24): Float32Array {
+  const ccx = cx * 2 - 1;
+  const ccy = cy * 2 - 1;
+  const verts: number[] = [];
+  for (let i = 0; i < segments; i++) {
+    const a0 = (i / segments) * Math.PI * 2;
+    const a1 = ((i + 1) / segments) * Math.PI * 2;
+    verts.push(
+      ccx, ccy,
+      (cx + Math.cos(a0) * rx) * 2 - 1, (cy + Math.sin(a0) * ry) * 2 - 1,
+      (cx + Math.cos(a1) * rx) * 2 - 1, (cy + Math.sin(a1) * ry) * 2 - 1
+    );
+  }
+  return new Float32Array(verts);
+}
+
 // 무방향 에지 집합(삼각 메시 tessellation)에서 삼각형 인덱스(평면 배열) 복원.
 // 세 정점이 서로 모두 연결되어 있으면 삼각형으로 간주, 중복 제거.
 export function trianglesFromConnections(connections: Connection[]): number[] {

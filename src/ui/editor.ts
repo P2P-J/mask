@@ -1,5 +1,5 @@
 import type { Store } from "../state/store";
-import { getSelectedLayer, setParam } from "../state/reducer";
+import { getSelectedLayer, setParam, setColor } from "../state/reducer";
 
 // 슬라이더 라벨(한국어)
 const LABELS: Record<string, string> = {
@@ -14,6 +14,7 @@ const LABELS: Record<string, string> = {
   eyeBrighten: "눈 밝히기", aegyo: "애교살",
   noseSize: "코 축소", noseBridge: "콧대 슬림", noseTip: "코끝 축소", noseWing: "코볼 축소",
   mouthSize: "입 크기", lipThick: "입술 도톰", smile: "입꼬리(미소)", browHeight: "눈썹 높이",
+  lipstick: "립스틱", blush: "블러셔", eyeshadow: "아이섀도", eyebrow: "아이브로우",
 };
 
 export class EditorDock {
@@ -32,7 +33,7 @@ export class EditorDock {
     this.titleEl.textContent = `편집 — ${layer.name}`;
     this.bodyEl.innerHTML = "";
     const keys = Object.keys(layer.params);
-    if (keys.length === 0) {
+    if (keys.length === 0 && !layer.colors) {
       const e = document.createElement("div");
       e.className = "editor-empty";
       e.textContent = "조절할 항목이 없습니다";
@@ -64,5 +65,25 @@ export class EditorDock {
       wrap.append(label, slider);
       this.bodyEl.appendChild(wrap);
     });
+
+    // 색상(메이크업 등) — 컬러 피커
+    if (layer.colors) {
+      Object.keys(layer.colors).forEach((key) => {
+        const row = document.createElement("div");
+        row.className = "color-row";
+        const span = document.createElement("span");
+        span.textContent = `${LABELS[key] ?? key} 색`;
+        const picker = document.createElement("input");
+        picker.type = "color";
+        picker.value = layer.colors![key];
+        picker.addEventListener("input", () => {
+          this.suppress = true;
+          this.store.update((st) => setColor(st, layer.id, key, picker.value));
+          this.suppress = false;
+        });
+        row.append(span, picker);
+        this.bodyEl.appendChild(row);
+      });
+    }
   }
 }

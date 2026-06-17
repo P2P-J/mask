@@ -11,12 +11,9 @@ export const LIPS = regionIndices(FaceLandmarker.FACE_LANDMARKS_LIPS as Connecti
 // 눈 영역(눈 밝히기 마스크용).
 export const LEFT_EYE = regionIndices(FaceLandmarker.FACE_LANDMARKS_LEFT_EYE as Connection[]);
 export const RIGHT_EYE = regionIndices(FaceLandmarker.FACE_LANDMARKS_RIGHT_EYE as Connection[]);
+// 눈썹 영역(아이브로우 메이크업/마스크용).
+export const LEFT_BROW = regionIndices(FaceLandmarker.FACE_LANDMARKS_LEFT_EYEBROW as Connection[]);
+export const RIGHT_BROW = regionIndices(FaceLandmarker.FACE_LANDMARKS_RIGHT_EYEBROW as Connection[]);
 
 // 도려낼 영역(눈/눈썹/입) — 윤곽 루프의 유니크 정점.
-export const HOLES = [
-  LEFT_EYE,
-  RIGHT_EYE,
-  regionIndices(FaceLandmarker.FACE_LANDMARKS_LEFT_EYEBROW as Connection[]),
-  regionIndices(FaceLandmarker.FACE_LANDMARKS_RIGHT_EYEBROW as Connection[]),
-  LIPS,
-];
+export const HOLES = [LEFT_EYE, RIGHT_EYE, LEFT_BROW, RIGHT_BROW, LIPS];

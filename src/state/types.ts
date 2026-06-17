@@ -4,6 +4,7 @@ export interface Layer {
   category: string; // 'face'
   enabled: boolean;
   params: Record<string, number>; // 각 슬라이더 0~100
+  colors?: Record<string, string>; // 메이크업 등 색상(hex)
 }
 
 export interface Scene {

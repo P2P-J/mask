@@ -62,7 +62,7 @@ export class Pipeline {
     enabled.forEach((layer, i) => {
       const last = i === enabled.length - 1;
       gl.bindVertexArray(this.vao); // 각 패스 전 풀스크린 VAO 보장(스무딩이 내부 VAO를 바꿔도 안전)
-      this.passes[layer.id].render(input, last ? null : dst.fbo, layer.params, landmarks);
+      this.passes[layer.id].render(input, last ? null : dst.fbo, layer.params, landmarks, layer.colors);
       if (!last) {
         input = dst.tex;
         [src, dst] = [dst, src];
