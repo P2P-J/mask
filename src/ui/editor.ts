@@ -7,7 +7,9 @@ const LABELS: Record<string, string> = {
   brightness: "밝기", contrast: "대비", tone: "톤", white: "화이트밸런스",
   saturation: "채도", warmth: "따뜻함",
   whiten: "화이트닝",
-  slim: "얼굴 슬림", headSize: "머리 크기",
+  slim: "얼굴 갸름", faceSize: "작은 얼굴", jaw: "V라인 턱", chin: "턱 길이", forehead: "이마 축소",
+  eyeSize: "눈 크게", noseSize: "코 축소", mouthSize: "입 크기", lipThick: "입술 도톰",
+  smile: "입꼬리(미소)", browLift: "눈썹 올리기",
 };
 
 export class EditorDock {

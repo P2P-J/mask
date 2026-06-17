@@ -1,27 +1,30 @@
 import { compileProgram, FULLSCREEN_VS } from "./glUtils";
-import { faceCenterRadius } from "./faceMaskGeometry";
+import { buildDeformers, MAX_DEFORMERS } from "./reshapeDeformers";
 import type { FxPass } from "./passes";
 import type { NormalizedLandmark } from "@mediapipe/tasks-vision";
 
-// 얼굴 중심 기준 liquify 워프: 바깥쪽에서 샘플 → 얼굴 영역이 안으로 압축(슬림/축소).
-// 단일 풀스크린 패스(파이프라인이 풀스크린 VAO를 바인딩해 둠).
+// 다중 deformer 역워프: 각 화소에서 영향 합산 후 입력을 v_uv - disp 위치에서 샘플.
 const RESHAPE_FS = `#version 300 es
 precision highp float;
 in vec2 v_uv;
 uniform sampler2D u_tex;
-uniform vec2 u_center;
-uniform vec2 u_radius;
-uniform float u_slim;  // 가로 압축량
-uniform float u_size;  // 전체 축소량
+uniform int u_count;
+uniform vec4 u_defA[${MAX_DEFORMERS}]; // cx,cy,r,scale
+uniform vec4 u_defB[${MAX_DEFORMERS}]; // tx,ty,_,_
 out vec4 o;
 void main(){
-  vec2 d = (v_uv - u_center) / max(u_radius, vec2(1e-3));
-  float r = length(d);
-  float fall = smoothstep(1.6, 0.1, r); // 얼굴 안 →1, 밖 →0
-  vec2 off = vec2(0.0);
-  off.x += (v_uv.x - u_center.x) * u_slim * fall; // 가로 압축(갸름)
-  off += (v_uv - u_center) * u_size * fall;        // 전체 축소
-  o = texture(u_tex, v_uv + off);                  // 바깥쪽 샘플 → 안으로 압축
+  vec2 disp = vec2(0.0);
+  for (int i = 0; i < ${MAX_DEFORMERS}; i++) {
+    if (i >= u_count) break;
+    vec2 c = u_defA[i].xy;
+    float r = u_defA[i].z;
+    float sc = u_defA[i].w;
+    vec2 tr = u_defB[i].xy;
+    vec2 dv = v_uv - c;
+    float w = 1.0 - smoothstep(0.0, max(r, 1e-4), length(dv));
+    disp += w * (tr + dv * sc);
+  }
+  o = texture(u_tex, v_uv - disp);
 }`;
 
 export class ReshapePass implements FxPass {
@@ -35,8 +38,7 @@ export class ReshapePass implements FxPass {
   constructor(gl: WebGL2RenderingContext) {
     this.gl = gl;
     this.prog = compileProgram(gl, FULLSCREEN_VS, RESHAPE_FS);
-    for (const n of ["u_tex", "u_center", "u_radius", "u_slim", "u_size"])
-      this.u[n] = gl.getUniformLocation(this.prog, n);
+    for (const n of ["u_tex", "u_count", "u_defA", "u_defB"]) this.u[n] = gl.getUniformLocation(this.prog, n);
   }
 
   resize(w: number, h: number): void {
@@ -58,17 +60,12 @@ export class ReshapePass implements FxPass {
     gl.bindTexture(gl.TEXTURE_2D, input);
     gl.uniform1i(this.u.u_tex, 0);
     if (landmarks) {
-      const f = faceCenterRadius(landmarks);
-      gl.uniform2f(this.u.u_center, f.cx, f.cy);
-      gl.uniform2f(this.u.u_radius, f.rx, f.ry);
-      gl.uniform1f(this.u.u_slim, ((params.slim ?? 0) / 100) * 0.3); // 최대 0.3
-      gl.uniform1f(this.u.u_size, ((params.headSize ?? 0) / 100) * 0.22); // 최대 0.22
+      const d = buildDeformers(landmarks, params);
+      gl.uniform1i(this.u.u_count, d.count);
+      gl.uniform4fv(this.u.u_defA, d.defA);
+      gl.uniform4fv(this.u.u_defB, d.defB);
     } else {
-      // 얼굴 없으면 워프 없음(원본)
-      gl.uniform2f(this.u.u_center, 0.5, 0.5);
-      gl.uniform2f(this.u.u_radius, 1, 1);
-      gl.uniform1f(this.u.u_slim, 0);
-      gl.uniform1f(this.u.u_size, 0);
+      gl.uniform1i(this.u.u_count, 0);
     }
     gl.drawArrays(gl.TRIANGLES, 0, 3);
   }

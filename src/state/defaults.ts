@@ -28,7 +28,10 @@ export function defaultLayers(): Layer[] {
       name: "윤곽/리쉐이프",
       category: "face",
       enabled: false,
-      params: { slim: 0, headSize: 0 },
+      params: {
+        slim: 0, faceSize: 0, jaw: 0, chin: 0, forehead: 0,
+        eyeSize: 0, noseSize: 0, mouthSize: 0, lipThick: 0, smile: 0, browLift: 0,
+      },
     },
   ];
 }
