@@ -52,6 +52,7 @@ export class Pipeline {
   render(video: HTMLVideoElement, layers: Layer[], landmarks: NormalizedLandmark[] | null): void {
     const gl = this.gl;
     if (!this.a || !this.b) return;
+    gl.activeTexture(gl.TEXTURE0); // 예외로 텍스처 유닛이 어긋나도 비디오 업로드는 항상 0번에
     gl.bindTexture(gl.TEXTURE_2D, this.videoTex);
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, video);
 

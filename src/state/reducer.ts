@@ -38,7 +38,7 @@ export function setSelect(s: AppState, layerId: string, key: string, value: stri
   return mapActiveScene(s, (scene) =>
     mapLayer(scene, layerId, (l) => ({
       ...l,
-      selects: { ...(l.selects ?? {}), [key]: { ...l.selects![key], value } },
+      selects: { ...(l.selects ?? {}), [key]: { options: l.selects?.[key]?.options ?? [], value } },
     }))
   );
 }
