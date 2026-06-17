@@ -5,8 +5,8 @@ import {
   FULLSCREEN_VS,
   type RenderTarget,
 } from "./glUtils";
-import { buildFan } from "./faceMaskGeometry";
-import { REGIONS } from "./faceRegions";
+import { buildFan, buildMeshVerts } from "./faceMaskGeometry";
+import { FACE_TRIANGLES, HOLES } from "./faceRegions";
 import type { FxPass } from "./passes";
 import type { NormalizedLandmark } from "@mediapipe/tasks-vision";
 
@@ -144,8 +144,8 @@ export class SmoothingPass implements FxPass {
     gl.useProgram(this.geoProg);
     gl.clearColor(0, 0, 0, 1);
     gl.clear(gl.COLOR_BUFFER_BIT);
-    this.drawFan(landmarks, REGIONS.face, 1.0);
-    for (const hole of REGIONS.holes) this.drawFan(landmarks, hole, 0.0);
+    this.drawMesh(landmarks, FACE_TRIANGLES, 1.0); // 전체 얼굴 메시 = 그 사람 얼굴 표면 그대로
+    for (const hole of HOLES) this.drawFan(landmarks, hole, 0.0); // 눈/눈썹/입 도려냄
 
     // 2) 마스크 페더(2패스 블러) → maskBlur
     gl.bindVertexArray(this.fsVao);
@@ -182,6 +182,15 @@ export class SmoothingPass implements FxPass {
     gl.uniform1f(this.uc.u_texture, (params.texture ?? 0) / 100);
     gl.drawArrays(gl.TRIANGLES, 0, 3);
     gl.activeTexture(gl.TEXTURE0);
+  }
+
+  // 전체 메시 삼각형을 동적 버퍼에 올려 그린다(geoVao/geoBuf 바인딩 상태에서 호출)
+  private drawMesh(landmarks: NormalizedLandmark[], triangles: number[], val: number): void {
+    const gl = this.gl;
+    const verts = buildMeshVerts(landmarks, triangles);
+    gl.bufferData(gl.ARRAY_BUFFER, verts, gl.DYNAMIC_DRAW);
+    gl.uniform1f(this.uGeoVal, val);
+    gl.drawArrays(gl.TRIANGLES, 0, verts.length / 2);
   }
 
   // 영역 정점 팬을 동적 버퍼에 올려 그린다(geoVao/geoBuf가 바인딩된 상태에서 호출)

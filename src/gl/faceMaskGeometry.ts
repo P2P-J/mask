@@ -40,3 +40,45 @@ export function buildFan(landmarks: NormalizedLandmark[], indices: number[]): Fl
   }
   return new Float32Array(verts);
 }
+
+// 무방향 에지 집합(삼각 메시 tessellation)에서 삼각형 인덱스(평면 배열) 복원.
+// 세 정점이 서로 모두 연결되어 있으면 삼각형으로 간주, 중복 제거.
+export function trianglesFromConnections(connections: Connection[]): number[] {
+  const adj = new Map<number, Set<number>>();
+  const add = (a: number, b: number): void => {
+    if (!adj.has(a)) adj.set(a, new Set());
+    adj.get(a)!.add(b);
+  };
+  for (const c of connections) {
+    add(c.start, c.end);
+    add(c.end, c.start);
+  }
+  const tris: number[] = [];
+  const seen = new Set<string>();
+  for (const c of connections) {
+    const a = c.start;
+    const b = c.end;
+    const nb = adj.get(b)!;
+    for (const x of adj.get(a)!) {
+      if (nb.has(x)) {
+        const key = [a, b, x].sort((p, q) => p - q).join("-");
+        if (!seen.has(key)) {
+          seen.add(key);
+          tris.push(a, b, x);
+        }
+      }
+    }
+  }
+  return tris;
+}
+
+// 삼각형 인덱스 배열 → 비인덱스 클립공간 정점(x=2lx-1, y=1-2ly)
+export function buildMeshVerts(landmarks: NormalizedLandmark[], triangles: number[]): Float32Array {
+  const verts = new Float32Array(triangles.length * 2);
+  for (let i = 0; i < triangles.length; i++) {
+    const l = landmarks[triangles[i]];
+    verts[i * 2] = l.x * 2 - 1;
+    verts[i * 2 + 1] = 1 - l.y * 2;
+  }
+  return verts;
+}
