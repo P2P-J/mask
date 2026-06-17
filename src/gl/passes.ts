@@ -7,6 +7,7 @@ import { ReshapePass } from "./reshape";
 import { EyeDetailPass } from "./eyeDetail";
 import { MakeupPass } from "./makeup";
 import { FilterPass } from "./filter";
+import { BackgroundPass } from "./background";
 
 // 패스: 입력 텍스처 → target(FBO 또는 null=캔버스)에 결과 렌더.
 // 내부 FBO가 필요한 패스(스무딩)를 위해 resize/target/landmarks를 받는다.
@@ -146,5 +147,6 @@ export function createPasses(gl: WebGL2RenderingContext): Record<string, FxPass>
     makeup: new MakeupPass(gl),
     reshape: new ReshapePass(gl),
     filter: new FilterPass(gl),
+    background: new BackgroundPass(gl),
   };
 }

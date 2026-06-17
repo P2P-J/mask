@@ -62,11 +62,18 @@ export function defaultLayers(): Layer[] {
       params: { intensity: 100 },
       selects: { preset: { value: "없음", options: [...FILTER_PRESETS] } },
     },
+    {
+      id: "background",
+      name: "배경 흐림",
+      category: "face",
+      enabled: false,
+      params: { blur: 70 },
+    },
   ];
 }
 
 // 렌더 순서(고정): 스무딩 → 색보정 → 치아 → 눈 → 리쉐이프(워프는 마지막)
-export const LAYER_ORDER = ["smoothing", "color", "teeth", "eyeDetail", "makeup", "reshape", "filter"] as const;
+export const LAYER_ORDER = ["smoothing", "color", "teeth", "eyeDetail", "makeup", "reshape", "filter", "background"] as const;
 
 export const CATEGORIES = [
   { id: "face", name: "얼굴", enabled: true },

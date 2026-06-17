@@ -1,5 +1,6 @@
 import * as camera from "./camera";
 import { Tracker } from "./tracker";
+import { Segmenter } from "./segmenter";
 import { Pipeline } from "./gl/pipeline";
 import { MeshOverlay } from "./ui/overlay";
 import { FpsMeter, LatencyMeter } from "./metrics";
@@ -16,6 +17,7 @@ import { createCanvasFitter } from "./ui/canvasFit";
 const glCanvas = document.getElementById("gl-canvas") as HTMLCanvasElement;
 const overlayCanvas = document.getElementById("overlay-canvas") as HTMLCanvasElement;
 const tracker = new Tracker();
+const segmenter = new Segmenter();
 const pipeline = new Pipeline(glCanvas);
 const overlay = new MeshOverlay(overlayCanvas);
 const fpsMeter = new FpsMeter(0.1);
@@ -100,6 +102,18 @@ function loop(): void {
       const { faces, inferenceMs } = tracker.detect(current.video, frameStart);
       faceDetected = faces.length > 0;
       latencyMeter.record(inferenceMs);
+      // 배경 레이어가 켜져 있을 때만 세그멘테이션 실행(비용 큼)
+      const bgOn =
+        correctionOn && !showOriginal &&
+        getActiveScene(store.get()).layers.some((l) => l.id === "background" && l.enabled);
+      if (bgOn) {
+        try {
+          const seg = segmenter.segment(current.video, frameStart);
+          if (seg) pipeline.updateSegMask(seg.data, seg.width, seg.height);
+        } catch {
+          /* 세그멘테이션 실패 무시 */
+        }
+      }
       pipeline.render(current.video, activeLayers(), faces[0] ?? null);
       overlay.draw(faces, controls.overlayEnabled);
     } catch (e) {
@@ -124,6 +138,11 @@ function loop(): void {
 async function main(): Promise<void> {
   try {
     await tracker.init();
+    try {
+      await segmenter.init();
+    } catch (e) {
+      controls.showError("배경 세그멘테이션 모델 로드 실패(배경 기능 비활성): " + (e as Error).message);
+    }
     await restart();
     controls.setDevices(await camera.listDevices());
     running = true;

@@ -5,6 +5,7 @@ import {
   type RenderTarget,
 } from "./glUtils";
 import { createPasses, type FxPass } from "./passes";
+import { BackgroundPass } from "./background";
 import type { Layer } from "../state/types";
 import type { NormalizedLandmark } from "@mediapipe/tasks-vision";
 
@@ -24,6 +25,12 @@ export class Pipeline {
     this.videoTex = createTexture(gl);
     this.passes = createPasses(gl);
     gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+  }
+
+  // 세그멘테이션 마스크 전달(배경 패스가 사용)
+  updateSegMask(data: Uint8Array, mw: number, mh: number): void {
+    const bg = this.passes.background;
+    if (bg instanceof BackgroundPass) bg.setMask(data, mw, mh);
   }
 
   resize(w: number, h: number): void {
