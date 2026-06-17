@@ -2,7 +2,7 @@ import type { AppState } from "./types";
 import { defaultState } from "./defaults";
 import { serialize, deserialize } from "./persist";
 
-const KEY = "mask.state.v7"; // v7: 메이크업 레이어(립/블러셔/아이섀도/아이브로우 + 컬러)
+const KEY = "mask.state.v8"; // v8: 메이크업 아이라이너/컨투어 추가
 type Listener = (s: AppState) => void;
 
 export class Store {

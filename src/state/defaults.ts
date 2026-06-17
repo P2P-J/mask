@@ -35,8 +35,11 @@ export function defaultLayers(): Layer[] {
       name: "메이크업",
       category: "face",
       enabled: false,
-      params: { lipstick: 0, blush: 0, eyeshadow: 0, eyebrow: 0 },
-      colors: { lipstick: "#c85a64", blush: "#e8918c", eyeshadow: "#a87a6e", eyebrow: "#5a4636" },
+      params: { lipstick: 0, blush: 0, eyeshadow: 0, eyebrow: 0, liner: 0, contour: 0 },
+      colors: {
+        lipstick: "#c85a64", blush: "#e8918c", eyeshadow: "#a87a6e",
+        eyebrow: "#5a4636", liner: "#3a3030", contour: "#7a5a48",
+      },
     },
     {
       id: "reshape",

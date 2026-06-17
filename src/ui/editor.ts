@@ -15,6 +15,7 @@ const LABELS: Record<string, string> = {
   noseSize: "코 축소", noseBridge: "콧대 슬림", noseTip: "코끝 축소", noseWing: "코볼 축소",
   mouthSize: "입 크기", lipThick: "입술 도톰", smile: "입꼬리(미소)", browHeight: "눈썹 높이",
   lipstick: "립스틱", blush: "블러셔", eyeshadow: "아이섀도", eyebrow: "아이브로우",
+  liner: "아이라이너", contour: "컨투어",
 };
 
 export class EditorDock {

@@ -185,6 +185,30 @@ void main(){ vec2 t=u_texel*1.5; vec4 s=texture(u_tex,v_uv+vec2(t.x,t.y))+textur
         ],
       });
     }
+    if (on("liner")) {
+      const le = p(159);
+      const re = p(386); // 위 눈꺼풀
+      items.push({
+        key: "liner",
+        color: hexToRgb(colors.liner ?? "#3a3030"),
+        geoms: [
+          ellipseFan(le[0], le[1] + ew * 0.08, ew * 0.78, ew * 0.12),
+          ellipseFan(re[0], re[1] + ew * 0.08, ew * 0.78, ew * 0.12),
+        ],
+      });
+    }
+    if (on("contour")) {
+      const lc = p(234);
+      const rc = p(454); // 얼굴 양 옆(광대 아래 음영)
+      items.push({
+        key: "contour",
+        color: hexToRgb(colors.contour ?? "#7a5a48"),
+        geoms: [
+          ellipseFan(lc[0] + ew * 0.2, lc[1], ew * 0.4, ew * 1.3),
+          ellipseFan(rc[0] - ew * 0.2, rc[1], ew * 0.4, ew * 1.3),
+        ],
+      });
+    }
     return items;
   }
 
