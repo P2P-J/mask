@@ -57,7 +57,9 @@ void main(){
   float Cr = (orig.r - Y)*0.713 + 0.5;
   float skin = smoothstep(0.40,0.46,Cr) * (1.0 - smoothstep(0.62,0.68,Cr))
              * smoothstep(0.24,0.30,Cb) * (1.0 - smoothstep(0.50,0.56,Cb));
-  m *= mix(1.0, skin, 0.6);
+  // 아주 어두운 화소(머리카락 그림자) 추가 배제
+  float notDark = smoothstep(0.10, 0.20, Y);
+  m *= mix(1.0, skin * notDark, 0.85); // 머리카락 등 비피부 강하게 제외
   m = clamp(m, 0.0, 1.0);
   vec3 hf = orig - blur;
   vec3 sm = mix(orig, blur, u_strength);
@@ -187,7 +189,7 @@ export class SmoothingPass implements FxPass {
   // 전체 메시 삼각형을 동적 버퍼에 올려 그린다(geoVao/geoBuf 바인딩 상태에서 호출)
   private drawMesh(landmarks: NormalizedLandmark[], triangles: number[], val: number): void {
     const gl = this.gl;
-    const verts = buildMeshVerts(landmarks, triangles);
+    const verts = buildMeshVerts(landmarks, triangles, 1.08); // 8% 팽창 → 이마/헤어라인 쪽 커버 확장
     gl.bufferData(gl.ARRAY_BUFFER, verts, gl.DYNAMIC_DRAW);
     gl.uniform1f(this.uGeoVal, val);
     gl.drawArrays(gl.TRIANGLES, 0, verts.length / 2);

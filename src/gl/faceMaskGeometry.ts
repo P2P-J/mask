@@ -72,13 +72,29 @@ export function trianglesFromConnections(connections: Connection[]): number[] {
   return tris;
 }
 
-// 삼각형 인덱스 배열 → 비인덱스 클립공간 정점(x=2lx-1, y=1-2ly)
-export function buildMeshVerts(landmarks: NormalizedLandmark[], triangles: number[]): Float32Array {
+// 삼각형 인덱스 배열 → 비인덱스 클립공간 정점(x=2lx-1, y=1-2ly).
+// scale>1이면 중심 기준으로 팽창시켜 마스크를 바깥으로 확장(이마/헤어라인 커버 보강).
+export function buildMeshVerts(
+  landmarks: NormalizedLandmark[],
+  triangles: number[],
+  scale = 1
+): Float32Array {
+  let cx = 0;
+  let cy = 0;
+  for (const idx of triangles) {
+    const l = landmarks[idx];
+    cx += l.x * 2 - 1;
+    cy += 1 - l.y * 2;
+  }
+  cx /= triangles.length;
+  cy /= triangles.length;
   const verts = new Float32Array(triangles.length * 2);
   for (let i = 0; i < triangles.length; i++) {
     const l = landmarks[triangles[i]];
-    verts[i * 2] = l.x * 2 - 1;
-    verts[i * 2 + 1] = 1 - l.y * 2;
+    const x = l.x * 2 - 1;
+    const y = 1 - l.y * 2;
+    verts[i * 2] = cx + (x - cx) * scale;
+    verts[i * 2 + 1] = cy + (y - cy) * scale;
   }
   return verts;
 }
