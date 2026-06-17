@@ -2,7 +2,7 @@ import type { AppState } from "./types";
 import { defaultState } from "./defaults";
 import { serialize, deserialize } from "./persist";
 
-const KEY = "mask.state.v1";
+const KEY = "mask.state.v2"; // v2: 치아/리쉐이프 레이어 + 색보정 채도/따뜻함 추가
 type Listener = (s: AppState) => void;
 
 export class Store {
