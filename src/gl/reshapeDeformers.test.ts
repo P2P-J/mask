@@ -21,19 +21,21 @@ describe("buildDeformers", () => {
     expect(d.count).toBe(0);
   });
 
-  it("eyeSize>0 → 양쪽 눈 2개 deformer(양수 scale)", () => {
+  it("eyeSize>0 → 양쪽 눈 2개 deformer(양수 scale = 확대)", () => {
     const d = buildDeformers(face(), { eyeSize: 100 });
     expect(d.count).toBe(2);
-    expect(d.defA[3]).toBeGreaterThan(0); // 첫 deformer scale > 0 (확대)
+    expect(d.defB[0]).toBeGreaterThan(0); // 첫 deformer sx > 0 (확대)
   });
 
   it("count는 MAX_DEFORMERS를 넘지 않음", () => {
     const all = {
-      slim: 100, faceSize: 100, jaw: 100, chin: 100, forehead: 100,
-      eyeSize: 100, noseSize: 100, mouthSize: 100, lipThick: 100, smile: 100, browLift: 100,
+      slim: 100, faceSize: 100, cheekbone: 100, jaw: 100, chinLength: 100, forehead: 100,
+      eyeSize: 100, eyeSpacing: 100, eyeCorner: 100,
+      noseSize: 100, noseBridge: 100, noseTip: 100, noseWing: 100,
+      mouthSize: 100, lipThick: 100, smile: 100, browHeight: 100,
     };
     const d = buildDeformers(face(), all);
     expect(d.count).toBeLessThanOrEqual(MAX_DEFORMERS);
-    expect(d.count).toBeGreaterThan(0);
+    expect(d.count).toBeGreaterThan(10);
   });
 });

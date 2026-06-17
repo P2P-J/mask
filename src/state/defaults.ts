@@ -29,8 +29,10 @@ export function defaultLayers(): Layer[] {
       category: "face",
       enabled: false,
       params: {
-        slim: 0, faceSize: 0, jaw: 0, chin: 0, forehead: 0,
-        eyeSize: 0, noseSize: 0, mouthSize: 0, lipThick: 0, smile: 0, browLift: 0,
+        slim: 0, faceSize: 0, cheekbone: 0, jaw: 0, chinLength: 50, forehead: 0,
+        eyeSize: 0, eyeSpacing: 50, eyeCorner: 50,
+        noseSize: 0, noseBridge: 0, noseTip: 0, noseWing: 0,
+        mouthSize: 0, lipThick: 0, smile: 0, browHeight: 0,
       },
     },
   ];

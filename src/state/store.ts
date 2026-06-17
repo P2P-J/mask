@@ -2,7 +2,7 @@ import type { AppState } from "./types";
 import { defaultState } from "./defaults";
 import { serialize, deserialize } from "./persist";
 
-const KEY = "mask.state.v3"; // v3: 디테일 리쉐이프 파라미터 11종
+const KEY = "mask.state.v4"; // v4: 리쉐이프 17종(이방성 필드) + 양방향 파라미터
 type Listener = (s: AppState) => void;
 
 export class Store {

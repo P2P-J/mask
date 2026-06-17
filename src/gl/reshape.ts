@@ -9,20 +9,20 @@ precision highp float;
 in vec2 v_uv;
 uniform sampler2D u_tex;
 uniform int u_count;
-uniform vec4 u_defA[${MAX_DEFORMERS}]; // cx,cy,r,scale
-uniform vec4 u_defB[${MAX_DEFORMERS}]; // tx,ty,_,_
+uniform vec4 u_defA[${MAX_DEFORMERS}]; // cx,cy,rx,ry
+uniform vec4 u_defB[${MAX_DEFORMERS}]; // sx,sy,tx,ty
 out vec4 o;
 void main(){
   vec2 disp = vec2(0.0);
   for (int i = 0; i < ${MAX_DEFORMERS}; i++) {
     if (i >= u_count) break;
     vec2 c = u_defA[i].xy;
-    float r = u_defA[i].z;
-    float sc = u_defA[i].w;
-    vec2 tr = u_defB[i].xy;
+    vec2 rad = max(u_defA[i].zw, vec2(1e-4));
+    vec2 sxy = u_defB[i].xy;
+    vec2 tr = u_defB[i].zw;
     vec2 dv = v_uv - c;
-    float w = 1.0 - smoothstep(0.0, max(r, 1e-4), length(dv));
-    disp += w * (tr + dv * sc);
+    float w = 1.0 - smoothstep(0.0, 1.0, length(dv / rad)); // 타원 영역, 부드러운 falloff
+    disp += w * (tr + dv * sxy);
   }
   o = texture(u_tex, v_uv - disp);
 }`;

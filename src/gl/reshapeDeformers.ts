@@ -1,121 +1,125 @@
 import type { NormalizedLandmark } from "@mediapipe/tasks-vision";
 
-// 다중 워프(deformer) 기반 디테일 리쉐이프.
-// 각 deformer = 중심(cx,cy) + 반경(r) + 방사 스케일(scale) + 평행이동(tx,ty), uv 공간.
-// 셰이더가 화소별로 영향을 합산해 입력을 역워프 샘플링.
-export const MAX_DEFORMERS = 24;
+// 이방성·부드러운 필드 기반 디테일 리쉐이프.
+// deformer = 타원 영향영역(중심 c, 반경 rx/ry) 안에서 비례 스케일(sx,sy) + 평행이동(tx,ty).
+// 셰이더가 화소별 영향을 부드럽게(smoothstep) 합산 → 전체 밸런스 유지하며 자연스럽게 변형.
+export const MAX_DEFORMERS = 32;
 
 export interface Deformers {
   count: number;
-  defA: Float32Array; // [cx, cy, r, scale] × MAX
-  defB: Float32Array; // [tx, ty, 0, 0] × MAX
+  defA: Float32Array; // [cx, cy, rx, ry] × MAX
+  defB: Float32Array; // [sx, sy, tx, ty] × MAX
 }
 
 interface Def {
   cx: number;
   cy: number;
-  r: number;
-  scale: number;
+  rx: number;
+  ry: number;
+  sx: number;
+  sy: number;
   tx: number;
   ty: number;
 }
 
-// uv: x 그대로, y는 1-y(플립 텍스처 정합). y 증가 = 화면 위쪽.
 function uv(lm: NormalizedLandmark[], i: number): [number, number] {
   return [lm[i].x, 1 - lm[i].y];
 }
-function dist(a: [number, number], b: [number, number]): number {
+function d2(a: [number, number], b: [number, number]): number {
   return Math.hypot(a[0] - b[0], a[1] - b[1]);
 }
 function mid(a: [number, number], b: [number, number]): [number, number] {
   return [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2];
 }
 
-// params: 0..100 (0=중립). 모든 효과는 "뷰티" 방향 단방향.
-export function buildDeformers(lm: NormalizedLandmark[], params: Record<string, number>): Deformers {
-  const P = (k: string): number => (params[k] ?? 0) / 100;
+// 0..100 → 0..1 (단방향), 또는 -1..1 (양방향, 50=중립)
+const uni = (p: Record<string, number>, k: string): number => (p[k] ?? 0) / 100;
+const bi = (p: Record<string, number>, k: string): number => ((p[k] ?? 50) - 50) / 50;
+
+export function buildDeformers(lm: NormalizedLandmark[], p: Record<string, number>): Deformers {
   const defs: Def[] = [];
-  const push = (d: Def): void => {
-    if (defs.length < MAX_DEFORMERS) defs.push(d);
+  const add = (
+    c: [number, number],
+    rx: number,
+    ry: number,
+    sx: number,
+    sy: number,
+    tx = 0,
+    ty = 0
+  ): void => {
+    if (Math.abs(sx) < 1e-5 && Math.abs(sy) < 1e-5 && Math.abs(tx) < 1e-5 && Math.abs(ty) < 1e-5) return;
+    if (defs.length < MAX_DEFORMERS) defs.push({ cx: c[0], cy: c[1], rx, ry, sx, sy, tx, ty });
   };
 
   const L = uv(lm, 234);
   const R = uv(lm, 454);
   const TOP = uv(lm, 10);
   const CHIN = uv(lm, 152);
-  const faceW = dist(L, R);
-  const faceH = dist(TOP, CHIN);
-  const center: [number, number] = [(L[0] + R[0]) / 2, (TOP[1] + CHIN[1]) / 2];
+  const W = d2(L, R);
+  const H = d2(TOP, CHIN);
+  const C: [number, number] = [(L[0] + R[0]) / 2, (TOP[1] + CHIN[1]) / 2];
+  const leftEye = mid(uv(lm, 33), uv(lm, 133));
+  const rightEye = mid(uv(lm, 263), uv(lm, 362));
+  const eyeY = leftEye[1];
+  const ew = d2(uv(lm, 33), uv(lm, 133));
 
-  // 얼굴 갸름: 양 볼 안쪽으로
-  if (P("slim") > 0) {
-    const a = P("slim") * faceW * 0.13;
-    push({ cx: L[0], cy: L[1], r: faceW * 0.55, scale: 0, tx: +a, ty: 0 });
-    push({ cx: R[0], cy: R[1], r: faceW * 0.55, scale: 0, tx: -a, ty: 0 });
-  }
-  // 작은 얼굴: 전체 축소
-  if (P("faceSize") > 0) {
-    push({ cx: center[0], cy: center[1], r: Math.max(faceW, faceH) * 0.95, scale: -P("faceSize") * 0.18, tx: 0, ty: 0 });
-  }
-  // V라인 턱: 하악 안쪽+위로
-  if (P("jaw") > 0) {
+  // ── 얼굴형 (전체 비례 필드 → 밸런스 유지) ──
+  add(C, W * 0.78, H * 0.9, -uni(p, "slim") * 0.26, 0); // 갸름(가로 비례 압축)
+  add(C, W * 0.95, H * 1.0, -uni(p, "faceSize") * 0.16, -uni(p, "faceSize") * 0.16); // 작은 얼굴
+  add([C[0], eyeY], W * 0.72, H * 0.42, -uni(p, "cheekbone") * 0.2, 0); // 광대 축소(상안면 가로)
+  add([C[0], TOP[1]], W * 0.6, H * 0.5, 0, 0, 0, -uni(p, "forehead") * H * 0.07); // 이마 축소
+
+  // ── 턱 ──
+  {
     const JL = uv(lm, 172);
     const JR = uv(lm, 397);
-    const a = P("jaw");
-    push({ cx: JL[0], cy: JL[1], r: faceW * 0.42, scale: 0, tx: +a * faceW * 0.09, ty: +a * faceH * 0.03 });
-    push({ cx: JR[0], cy: JR[1], r: faceW * 0.42, scale: 0, tx: -a * faceW * 0.09, ty: +a * faceH * 0.03 });
+    const a = uni(p, "jaw");
+    add(JL, W * 0.45, H * 0.4, 0, 0, +a * W * 0.08, +a * H * 0.025); // V라인(좌 안+위)
+    add(JR, W * 0.45, H * 0.4, 0, 0, -a * W * 0.08, +a * H * 0.025); // V라인(우)
+    add(CHIN, W * 0.5, H * 0.45, 0, 0, 0, bi(p, "chinLength") * -H * 0.07); // 턱 길이(>50 길게=아래)
   }
-  // 턱 길이(짧게): 턱 위로
-  if (P("chin") > 0) {
-    push({ cx: CHIN[0], cy: CHIN[1], r: faceW * 0.5, scale: 0, tx: 0, ty: +P("chin") * faceH * 0.08 });
+
+  // ── 눈 ──
+  {
+    const eSize = uni(p, "eyeSize") * 0.34;
+    add(leftEye, ew * 1.7, ew * 1.7, eSize, eSize);
+    add(rightEye, ew * 1.7, ew * 1.7, eSize, eSize);
+    const space = bi(p, "eyeSpacing") * W * 0.04; // >50 넓게
+    add(leftEye, ew * 1.8, ew * 1.8, 0, 0, -space, 0);
+    add(rightEye, ew * 1.8, ew * 1.8, 0, 0, +space, 0);
+    const tilt = bi(p, "eyeCorner") * H * 0.025; // >50 올리기
+    add(uv(lm, 33), ew * 1.0, ew * 1.0, 0, 0, 0, +tilt); // 좌 눈꼬리(바깥)
+    add(uv(lm, 263), ew * 1.0, ew * 1.0, 0, 0, 0, +tilt); // 우 눈꼬리
   }
-  // 이마 축소: 헤어라인 아래로
-  if (P("forehead") > 0) {
-    push({ cx: TOP[0], cy: TOP[1], r: faceW * 0.6, scale: 0, tx: 0, ty: -P("forehead") * faceH * 0.07 });
-  }
-  // 눈 크게
-  if (P("eyeSize") > 0) {
-    const le = mid(uv(lm, 33), uv(lm, 133));
-    const re = mid(uv(lm, 263), uv(lm, 362));
-    const ew = dist(uv(lm, 33), uv(lm, 133));
-    const s = P("eyeSize") * 0.38;
-    push({ cx: le[0], cy: le[1], r: ew * 1.7, scale: s, tx: 0, ty: 0 });
-    push({ cx: re[0], cy: re[1], r: ew * 1.7, scale: s, tx: 0, ty: 0 });
-  }
-  // 코 축소
-  if (P("noseSize") > 0) {
+
+  // ── 코 ──
+  {
     const nt = uv(lm, 1);
-    const nw = dist(uv(lm, 64), uv(lm, 294));
-    push({ cx: nt[0], cy: nt[1], r: nw * 1.5, scale: -P("noseSize") * 0.3, tx: 0, ty: 0 });
+    const bridge = mid(uv(lm, 6), uv(lm, 197));
+    const nw = d2(uv(lm, 64), uv(lm, 294));
+    add(nt, nw * 1.5, nw * 1.5, -uni(p, "noseSize") * 0.26, -uni(p, "noseSize") * 0.26); // 코 전체 축소
+    add(bridge, nw * 0.7, H * 0.22, -uni(p, "noseBridge") * 0.3, 0); // 콧대 슬림(가로 압축)
+    add(nt, nw * 0.8, nw * 0.8, -uni(p, "noseTip") * 0.3, -uni(p, "noseTip") * 0.3); // 코끝 축소
+    add(uv(lm, 64), nw * 0.6, nw * 0.6, 0, 0, +uni(p, "noseWing") * nw * 0.16, 0); // 좌 콧볼 안으로
+    add(uv(lm, 294), nw * 0.6, nw * 0.6, 0, 0, -uni(p, "noseWing") * nw * 0.16, 0); // 우 콧볼
   }
-  // 입 크기(작게)
-  if (P("mouthSize") > 0) {
+
+  // ── 입 ──
+  {
     const mc = mid(uv(lm, 13), uv(lm, 14));
-    const mw = dist(uv(lm, 61), uv(lm, 291));
-    push({ cx: mc[0], cy: mc[1], r: mw * 1.2, scale: -P("mouthSize") * 0.25, tx: 0, ty: 0 });
+    const mw = d2(uv(lm, 61), uv(lm, 291));
+    add(mc, mw * 1.2, mw * 1.0, -uni(p, "mouthSize") * 0.22, -uni(p, "mouthSize") * 0.22); // 입 크기↓
+    add(mc, mw * 0.9, mw * 0.7, 0, +uni(p, "lipThick") * 0.22); // 입술 도톰(세로)
+    const sm = uni(p, "smile") * H * 0.028;
+    add(uv(lm, 61), mw * 0.55, mw * 0.55, 0, 0, 0, +sm); // 좌 입꼬리 위로
+    add(uv(lm, 291), mw * 0.55, mw * 0.55, 0, 0, 0, +sm); // 우 입꼬리
   }
-  // 입술 도톰
-  if (P("lipThick") > 0) {
-    const mc = mid(uv(lm, 13), uv(lm, 14));
-    const mw = dist(uv(lm, 61), uv(lm, 291));
-    push({ cx: mc[0], cy: mc[1], r: mw * 0.85, scale: +P("lipThick") * 0.18, tx: 0, ty: 0 });
-  }
-  // 입꼬리(미소): 양 입꼬리 위로
-  if (P("smile") > 0) {
-    const ml = uv(lm, 61);
-    const mr = uv(lm, 291);
-    const mw = dist(ml, mr);
-    const a = P("smile");
-    push({ cx: ml[0], cy: ml[1], r: mw * 0.55, scale: 0, tx: 0, ty: +a * faceH * 0.03 });
-    push({ cx: mr[0], cy: mr[1], r: mw * 0.55, scale: 0, tx: 0, ty: +a * faceH * 0.03 });
-  }
-  // 눈썹 올리기
-  if (P("browLift") > 0) {
-    const bl = uv(lm, 105);
-    const br = uv(lm, 334);
-    const a = P("browLift");
-    push({ cx: bl[0], cy: bl[1], r: faceW * 0.28, scale: 0, tx: 0, ty: +a * faceH * 0.045 });
-    push({ cx: br[0], cy: br[1], r: faceW * 0.28, scale: 0, tx: 0, ty: +a * faceH * 0.045 });
+
+  // ── 눈썹 ──
+  {
+    const lift = uni(p, "browHeight") * H * 0.045;
+    add(uv(lm, 105), W * 0.28, H * 0.18, 0, 0, 0, +lift);
+    add(uv(lm, 334), W * 0.28, H * 0.18, 0, 0, 0, +lift);
   }
 
   const defA = new Float32Array(MAX_DEFORMERS * 4);
@@ -123,10 +127,12 @@ export function buildDeformers(lm: NormalizedLandmark[], params: Record<string, 
   defs.forEach((d, i) => {
     defA[i * 4] = d.cx;
     defA[i * 4 + 1] = d.cy;
-    defA[i * 4 + 2] = d.r;
-    defA[i * 4 + 3] = d.scale;
-    defB[i * 4] = d.tx;
-    defB[i * 4 + 1] = d.ty;
+    defA[i * 4 + 2] = d.rx;
+    defA[i * 4 + 3] = d.ry;
+    defB[i * 4] = d.sx;
+    defB[i * 4 + 1] = d.sy;
+    defB[i * 4 + 2] = d.tx;
+    defB[i * 4 + 3] = d.ty;
   });
   return { count: defs.length, defA, defB };
 }
