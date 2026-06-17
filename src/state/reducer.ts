@@ -34,6 +34,15 @@ export function setColor(s: AppState, layerId: string, key: string, hex: string)
   );
 }
 
+export function setSelect(s: AppState, layerId: string, key: string, value: string): AppState {
+  return mapActiveScene(s, (scene) =>
+    mapLayer(scene, layerId, (l) => ({
+      ...l,
+      selects: { ...(l.selects ?? {}), [key]: { ...l.selects![key], value } },
+    }))
+  );
+}
+
 export function toggleLayer(s: AppState, layerId: string): AppState {
   return mapActiveScene(s, (scene) =>
     mapLayer(scene, layerId, (l) => ({ ...l, enabled: !l.enabled }))

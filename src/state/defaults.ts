@@ -1,4 +1,5 @@
 import type { AppState, Layer } from "./types";
+import { FILTER_PRESETS } from "../gl/filter";
 
 export function defaultLayers(): Layer[] {
   return [
@@ -53,11 +54,19 @@ export function defaultLayers(): Layer[] {
         mouthSize: 0, lipThick: 0, smile: 0, browHeight: 0,
       },
     },
+    {
+      id: "filter",
+      name: "필터",
+      category: "face",
+      enabled: false,
+      params: { intensity: 100 },
+      selects: { preset: { value: "없음", options: [...FILTER_PRESETS] } },
+    },
   ];
 }
 
 // 렌더 순서(고정): 스무딩 → 색보정 → 치아 → 눈 → 리쉐이프(워프는 마지막)
-export const LAYER_ORDER = ["smoothing", "color", "teeth", "eyeDetail", "makeup", "reshape"] as const;
+export const LAYER_ORDER = ["smoothing", "color", "teeth", "eyeDetail", "makeup", "reshape", "filter"] as const;
 
 export const CATEGORIES = [
   { id: "face", name: "얼굴", enabled: true },
