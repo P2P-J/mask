@@ -46,25 +46,51 @@ uniform sampler2D u_blur;
 uniform sampler2D u_mask;
 uniform float u_strength;
 uniform float u_texture;
+uniform float u_clarity;    // 잡티/주름 완화
+uniform float u_evenTone;   // 피부톤 균일화
+uniform float u_brighten;   // 얼굴 밝히기
+uniform float u_darkCircle; // 다크서클 완화
+uniform vec2 u_eyeL;        // 좌 눈밑 중심(uv)
+uniform vec2 u_eyeR;        // 우 눈밑 중심
+uniform float u_eyeRad;     // 눈밑 영역 반경
 out vec4 o;
+const vec3 LUMA = vec3(0.299, 0.587, 0.114);
 void main(){
   vec3 orig = texture(u_orig, v_uv).rgb;
   vec3 blur = texture(u_blur, v_uv).rgb;
   float m = texture(u_mask, v_uv).r;
   // 약한 스킨톤 게이트(윤곽 안 머리카락/수염 제외) — 부드럽게
-  float Y  = dot(orig, vec3(0.299,0.587,0.114));
+  float Y  = dot(orig, LUMA);
   float Cb = (orig.b - Y)*0.564 + 0.5;
   float Cr = (orig.r - Y)*0.713 + 0.5;
   float skin = smoothstep(0.40,0.46,Cr) * (1.0 - smoothstep(0.62,0.68,Cr))
              * smoothstep(0.24,0.30,Cb) * (1.0 - smoothstep(0.50,0.56,Cb));
-  // 아주 어두운 화소(머리카락 그림자) 추가 배제
   float notDark = smoothstep(0.10, 0.20, Y);
-  m *= mix(1.0, skin * notDark, 0.85); // 머리카락 등 비피부 강하게 제외
+  m *= mix(1.0, skin * notDark, 0.85);
   m = clamp(m, 0.0, 1.0);
+
+  // 1) 스무딩 + 텍스처 복원
   vec3 hf = orig - blur;
-  vec3 sm = mix(orig, blur, u_strength);
-  vec3 result = sm + u_texture * hf;
-  o = vec4(mix(orig, result, m), 1.0);
+  vec3 res = mix(orig, blur, u_strength) + u_texture * hf;
+  // 2) 잡티/주름 완화: 주변보다 어두운 점/선을 블러로 더 밀어줌
+  float spot = clamp((dot(blur, LUMA) - dot(res, LUMA)) * 4.0, 0.0, 1.0);
+  res = mix(res, blur, u_clarity * spot);
+  // 3) 피부톤 균일화: 색은 국소평균(blur), 밝기는 보존
+  vec3 evened = blur + (dot(res, LUMA) - dot(blur, LUMA));
+  res = mix(res, evened, u_evenTone);
+  // 4) 얼굴 밝히기
+  res += u_brighten * 0.16;
+
+  vec3 outc = mix(orig, res, m);
+
+  // 5) 다크서클 완화(눈밑 영역만 밝힘)
+  float de = max(
+    1.0 - smoothstep(0.0, u_eyeRad, length(v_uv - u_eyeL)),
+    1.0 - smoothstep(0.0, u_eyeRad, length(v_uv - u_eyeR))
+  );
+  outc += u_darkCircle * 0.18 * de * m;
+
+  o = vec4(clamp(outc, 0.0, 1.0), 1.0);
 }`;
 
 const KAWASE_OFFSETS = [0.0, 1.0, 2.0, 2.0];
@@ -105,7 +131,10 @@ export class SmoothingPass implements FxPass {
     this.compProg = compileProgram(gl, FULLSCREEN_VS, COMPOSITE_FS);
     this.uGeoVal = gl.getUniformLocation(this.geoProg, "u_val");
     for (const n of ["u_tex", "u_texel", "u_offset"]) this.ub[n] = gl.getUniformLocation(this.blurProg, n);
-    for (const n of ["u_orig", "u_blur", "u_mask", "u_strength", "u_texture"])
+    for (const n of [
+      "u_orig", "u_blur", "u_mask", "u_strength", "u_texture",
+      "u_clarity", "u_evenTone", "u_brighten", "u_darkCircle", "u_eyeL", "u_eyeR", "u_eyeRad",
+    ])
       this.uc[n] = gl.getUniformLocation(this.compProg, n);
   }
 
@@ -182,6 +211,18 @@ export class SmoothingPass implements FxPass {
     gl.uniform1i(this.uc.u_mask, 2);
     gl.uniform1f(this.uc.u_strength, (params.strength ?? 0) / 100);
     gl.uniform1f(this.uc.u_texture, (params.texture ?? 0) / 100);
+    gl.uniform1f(this.uc.u_clarity, (params.clarity ?? 0) / 100);
+    gl.uniform1f(this.uc.u_evenTone, (params.evenTone ?? 0) / 100);
+    gl.uniform1f(this.uc.u_brighten, (params.brighten ?? 0) / 100);
+    gl.uniform1f(this.uc.u_darkCircle, (params.darkCircle ?? 0) / 100);
+    // 눈밑 영역(다크서클): 눈 중심에서 약간 아래(uv y는 위로 증가 → 아래=−)
+    const p = (i: number): [number, number] => [landmarks[i].x, 1 - landmarks[i].y];
+    const lc = p(159);
+    const rc = p(386); // 각 눈 아래 눈꺼풀 근처
+    const ew = Math.hypot(p(133)[0] - p(33)[0], p(133)[1] - p(33)[1]);
+    gl.uniform2f(this.uc.u_eyeL, lc[0], lc[1] - ew * 0.4);
+    gl.uniform2f(this.uc.u_eyeR, rc[0], rc[1] - ew * 0.4);
+    gl.uniform1f(this.uc.u_eyeRad, ew * 0.85);
     gl.drawArrays(gl.TRIANGLES, 0, 3);
     gl.activeTexture(gl.TEXTURE0);
   }

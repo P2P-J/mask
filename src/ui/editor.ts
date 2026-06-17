@@ -4,6 +4,7 @@ import { getSelectedLayer, setParam } from "../state/reducer";
 // 슬라이더 라벨(한국어)
 const LABELS: Record<string, string> = {
   strength: "강도", texture: "질감 보존",
+  clarity: "잡티/주름 완화", evenTone: "피부톤 균일화", brighten: "얼굴 밝히기", darkCircle: "다크서클 완화",
   brightness: "밝기", contrast: "대비", tone: "톤", white: "화이트밸런스",
   saturation: "채도", warmth: "따뜻함",
   whiten: "화이트닝",

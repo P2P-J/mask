@@ -4,10 +4,10 @@ export function defaultLayers(): Layer[] {
   return [
     {
       id: "smoothing",
-      name: "피부 스무딩",
+      name: "피부",
       category: "face",
       enabled: true,
-      params: { strength: 45, texture: 70 },
+      params: { strength: 45, texture: 70, clarity: 0, evenTone: 0, brighten: 0, darkCircle: 0 },
     },
     {
       id: "color",

@@ -2,7 +2,7 @@ import type { AppState } from "./types";
 import { defaultState } from "./defaults";
 import { serialize, deserialize } from "./persist";
 
-const KEY = "mask.state.v4"; // v4: 리쉐이프 17종(이방성 필드) + 양방향 파라미터
+const KEY = "mask.state.v5"; // v5: 피부 디테일(잡티/주름·피부톤·밝히기·다크서클)
 type Listener = (s: AppState) => void;
 
 export class Store {
