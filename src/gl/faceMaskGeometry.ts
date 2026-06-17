@@ -72,6 +72,28 @@ export function trianglesFromConnections(connections: Connection[]): number[] {
   return tris;
 }
 
+// 리쉐이프 워프용 얼굴 중심/반경(uv 공간, y 반전 1-y).
+export interface FaceBox {
+  cx: number;
+  cy: number;
+  rx: number;
+  ry: number;
+}
+export function faceCenterRadius(lm: NormalizedLandmark[]): FaceBox {
+  const FACE_TOP = 10;
+  const FACE_BOTTOM = 152;
+  const FACE_LEFT = 234;
+  const FACE_RIGHT = 454;
+  const ux = (i: number): number => lm[i].x;
+  const uy = (i: number): number => 1 - lm[i].y;
+  return {
+    cx: (ux(FACE_LEFT) + ux(FACE_RIGHT)) / 2,
+    cy: (uy(FACE_TOP) + uy(FACE_BOTTOM)) / 2,
+    rx: Math.abs(ux(FACE_RIGHT) - ux(FACE_LEFT)) / 2,
+    ry: Math.abs(uy(FACE_TOP) - uy(FACE_BOTTOM)) / 2,
+  };
+}
+
 // 삼각형 인덱스 배열 → 비인덱스 클립공간 정점(x=2lx-1, y=1-2ly).
 // scale>1이면 중심 기준으로 팽창시켜 마스크를 바깥으로 확장(이마/헤어라인 커버 보강).
 export function buildMeshVerts(

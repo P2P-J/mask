@@ -1,5 +1,11 @@
 import { describe, it, expect } from "vitest";
-import { regionIndices, buildFan, trianglesFromConnections, buildMeshVerts } from "./faceMaskGeometry";
+import {
+  regionIndices,
+  buildFan,
+  trianglesFromConnections,
+  buildMeshVerts,
+  faceCenterRadius,
+} from "./faceMaskGeometry";
 import type { NormalizedLandmark } from "@mediapipe/tasks-vision";
 
 describe("faceMaskGeometry", () => {
@@ -44,6 +50,19 @@ describe("faceMaskGeometry", () => {
       keys.add([t[i], t[i + 1], t[i + 2]].sort((a, b) => a - b).join("-"));
     }
     expect(keys).toEqual(new Set(["0-1-2", "0-2-3"]));
+  });
+
+  it("faceCenterRadius: 극점 중점/반경(y 반전)", () => {
+    const arr = Array.from({ length: 468 }, () => ({ x: 0.5, y: 0.5, z: 0 })) as NormalizedLandmark[];
+    arr[10] = { x: 0.5, y: 0.2, z: 0 } as NormalizedLandmark;
+    arr[152] = { x: 0.5, y: 0.8, z: 0 } as NormalizedLandmark;
+    arr[234] = { x: 0.3, y: 0.5, z: 0 } as NormalizedLandmark;
+    arr[454] = { x: 0.7, y: 0.5, z: 0 } as NormalizedLandmark;
+    const f = faceCenterRadius(arr);
+    expect(f.cx).toBeCloseTo(0.5);
+    expect(f.cy).toBeCloseTo(0.5); // (1-0.2 + 1-0.8)/2
+    expect(f.rx).toBeCloseTo(0.2);
+    expect(f.ry).toBeCloseTo(0.3);
   });
 
   it("buildMeshVerts: 삼각형 인덱스 → 클립공간 정점", () => {

@@ -23,11 +23,18 @@ export function defaultLayers(): Layer[] {
       enabled: false,
       params: { whiten: 60 },
     },
+    {
+      id: "reshape",
+      name: "윤곽/리쉐이프",
+      category: "face",
+      enabled: false,
+      params: { slim: 0, headSize: 0 },
+    },
   ];
 }
 
-// 렌더 순서(고정): 스무딩 → 색보정 → 치아
-export const LAYER_ORDER = ["smoothing", "color", "teeth"] as const;
+// 렌더 순서(고정): 스무딩 → 색보정 → 치아 → 리쉐이프(워프는 마지막)
+export const LAYER_ORDER = ["smoothing", "color", "teeth", "reshape"] as const;
 
 export const CATEGORIES = [
   { id: "face", name: "얼굴", enabled: true },
