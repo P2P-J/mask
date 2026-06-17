@@ -16,11 +16,18 @@ export function defaultLayers(): Layer[] {
       enabled: false,
       params: { brightness: 50, contrast: 50, tone: 50, white: 50, saturation: 50, warmth: 50 },
     },
+    {
+      id: "teeth",
+      name: "치아 화이트닝",
+      category: "face",
+      enabled: false,
+      params: { whiten: 60 },
+    },
   ];
 }
 
-// 렌더 순서(고정): 스무딩 → 색보정
-export const LAYER_ORDER = ["smoothing", "color"] as const;
+// 렌더 순서(고정): 스무딩 → 색보정 → 치아
+export const LAYER_ORDER = ["smoothing", "color", "teeth"] as const;
 
 export const CATEGORIES = [
   { id: "face", name: "얼굴", enabled: true },

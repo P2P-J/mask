@@ -2,6 +2,7 @@ import { compileProgram, FULLSCREEN_VS } from "./glUtils";
 import { colorUniforms } from "./mapping";
 import type { NormalizedLandmark } from "@mediapipe/tasks-vision";
 import { SmoothingPass } from "./smoothing";
+import { TeethPass } from "./teeth";
 
 // 패스: 입력 텍스처 → target(FBO 또는 null=캔버스)에 결과 렌더.
 // 내부 FBO가 필요한 패스(스무딩)를 위해 resize/target/landmarks를 받는다.
@@ -134,5 +135,6 @@ export function createPasses(gl: WebGL2RenderingContext): Record<string, FxPass>
     passthrough: new PassthroughPass(gl),
     smoothing: new SmoothingPass(gl),
     color: new ColorPass(gl),
+    teeth: new TeethPass(gl),
   };
 }
