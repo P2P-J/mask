@@ -11,9 +11,9 @@ export class Segmenter {
   private seg: ImageSegmenter | null = null;
 
   async init(): Promise<void> {
-    const fileset = await FilesetResolver.forVisionTasks("/wasm");
+    const fileset = await FilesetResolver.forVisionTasks(`${import.meta.env.BASE_URL}wasm`);
     this.seg = await ImageSegmenter.createFromOptions(fileset, {
-      baseOptions: { modelAssetPath: "/models/selfie_segmenter.tflite", delegate: "GPU" },
+      baseOptions: { modelAssetPath: `${import.meta.env.BASE_URL}models/selfie_segmenter.tflite`, delegate: "GPU" },
       runningMode: "VIDEO",
       outputCategoryMask: false,
       outputConfidenceMasks: true,
