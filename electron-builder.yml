@@ -1,0 +1,24 @@
+appId: com.mask.app
+productName: Mask
+directories:
+  output: dist-electron
+# asar 비활성화: MediaPipe가 wasm/모델을 file:// fetch로 읽으므로,
+# asar 안에 묶지 않고 디스크에 그대로 둬서 로딩 문제를 원천 차단.
+asar: false
+files:
+  - dist/**
+  - electron/**
+win:
+  target:
+    - nsis
+  artifactName: Mask-Setup-${version}.${ext}
+nsis:
+  oneClick: false
+  perMachine: false
+  allowToChangeInstallationDirectory: true
+publish:
+  provider: github
+  owner: P2P-J
+  repo: mask
+  # draft가 아닌 정식 릴리스로 바로 게시 → 친구가 즉시 다운로드 가능
+  releaseType: release

@@ -13,10 +13,10 @@ export class Tracker {
   private landmarker: FaceLandmarker | null = null;
 
   async init(): Promise<void> {
-    const fileset = await FilesetResolver.forVisionTasks("/wasm");
+    const fileset = await FilesetResolver.forVisionTasks(`${import.meta.env.BASE_URL}wasm`);
     this.landmarker = await FaceLandmarker.createFromOptions(fileset, {
       baseOptions: {
-        modelAssetPath: "/models/face_landmarker.task",
+        modelAssetPath: `${import.meta.env.BASE_URL}models/face_landmarker.task`,
         delegate: "GPU",
       },
       runningMode: "VIDEO",

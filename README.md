@@ -74,3 +74,14 @@ docs/                  PRD, 설계/구현 계획(docs/superpowers)
 ## 라이선스
 
 MIT (LICENSE 참조). MediaPipe는 Apache 2.0.
+
+## 다운로드 / 설치 (테스터용)
+
+1. [Releases](https://github.com/P2P-J/mask/releases) 페이지에서 최신 `Mask-Setup-x.y.z.exe`를 받습니다.
+2. 실행 시 "Windows의 PC를 보호했습니다" 경고가 뜨면 **추가 정보 → 실행**을 누릅니다.
+   (코드 서명을 하지 않은 무료 빌드라 나오는 정상 경고입니다.)
+3. 설치 후 실행하면 웹캠 미리보기와 보정 UI가 뜹니다. 카메라 접근을 허용해 주세요.
+   - 카메라가 안 잡히면 Windows **설정 → 개인정보 보호 및 보안 → 카메라**에서 데스크톱 앱 접근을 켜세요.
+
+> 현재 버전은 **독립 창 앱**입니다. OBS/치지직 등에 "Mask" 가상 카메라로 잡히는 기능은 다음 단계에서 추가됩니다.
+> 써보고 문제가 있으면 [이슈](https://github.com/P2P-J/mask/issues)나 메신저로 알려주세요.
