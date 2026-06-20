@@ -54,10 +54,12 @@ function makeDraggable(
       document.body.style.userSelect = "";
       handle.removeEventListener("pointermove", move);
       handle.removeEventListener("pointerup", up);
+      handle.removeEventListener("pointercancel", up); // 취소 시에도 정리(텍스트 선택 잠김 방지)
       onEnd();
     };
     handle.addEventListener("pointermove", move);
     handle.addEventListener("pointerup", up);
+    handle.addEventListener("pointercancel", up);
   });
 }
 

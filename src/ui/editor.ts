@@ -1,5 +1,5 @@
 import type { Store } from "../state/store";
-import { getSelectedLayer, setParam, setColor } from "../state/reducer";
+import { getSelectedLayer, setParam, setColor, setSelect } from "../state/reducer";
 
 // 슬라이더 라벨(한국어)
 const LABELS: Record<string, string> = {
@@ -16,6 +16,8 @@ const LABELS: Record<string, string> = {
   mouthSize: "입 크기", lipThick: "입술 도톰", smile: "입꼬리(미소)", browHeight: "눈썹 높이",
   lipstick: "립스틱", blush: "블러셔", eyeshadow: "아이섀도", eyebrow: "아이브로우",
   liner: "아이라이너", contour: "컨투어",
+  intensity: "강도", preset: "프리셋",
+  blur: "배경 흐림",
 };
 
 export class EditorDock {
@@ -34,7 +36,7 @@ export class EditorDock {
     this.titleEl.textContent = `편집 — ${layer.name}`;
     this.bodyEl.innerHTML = "";
     const keys = Object.keys(layer.params);
-    if (keys.length === 0 && !layer.colors) {
+    if (keys.length === 0 && !layer.colors && !layer.selects) {
       const e = document.createElement("div");
       e.className = "editor-empty";
       e.textContent = "조절할 항목이 없습니다";
@@ -66,6 +68,29 @@ export class EditorDock {
       wrap.append(label, slider);
       this.bodyEl.appendChild(wrap);
     });
+
+    // 드롭다운(필터 프리셋 등)
+    if (layer.selects) {
+      Object.keys(layer.selects).forEach((key) => {
+        const sel = layer.selects![key];
+        const row = document.createElement("div");
+        row.className = "color-row";
+        const span = document.createElement("span");
+        span.textContent = LABELS[key] ?? key;
+        const dd = document.createElement("select");
+        dd.className = "tds-select";
+        sel.options.forEach((opt) => {
+          const o = document.createElement("option");
+          o.value = opt;
+          o.textContent = opt;
+          if (opt === sel.value) o.selected = true;
+          dd.appendChild(o);
+        });
+        dd.addEventListener("change", () => this.store.update((st) => setSelect(st, layer.id, key, dd.value)));
+        row.append(span, dd);
+        this.bodyEl.appendChild(row);
+      });
+    }
 
     // 색상(메이크업 등) — 컬러 피커
     if (layer.colors) {

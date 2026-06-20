@@ -64,6 +64,7 @@ export class MakeupPass implements FxPass {
   private tintProg: WebGLProgram;
   private maskGeom: RenderTarget | null = null;
   private maskBlur: RenderTarget | null = null;
+  private maskScratch: RenderTarget | null = null; // 페더 전용(아이템 핑퐁과 분리)
   private workA: RenderTarget | null = null;
   private workB: RenderTarget | null = null;
   private w = 0;
@@ -102,7 +103,7 @@ void main(){ vec2 t=u_texel*1.5; vec4 s=texture(u_tex,v_uv+vec2(t.x,t.y))+textur
     this.w = w;
     this.h = h;
     const gl = this.gl;
-    for (const rt of [this.maskGeom, this.maskBlur, this.workA, this.workB]) {
+    for (const rt of [this.maskGeom, this.maskBlur, this.maskScratch, this.workA, this.workB]) {
       if (rt) {
         gl.deleteFramebuffer(rt.fbo);
         gl.deleteTexture(rt.tex);
@@ -110,6 +111,7 @@ void main(){ vec2 t=u_texel*1.5; vec4 s=texture(u_tex,v_uv+vec2(t.x,t.y))+textur
     }
     this.maskGeom = createRenderTarget(gl, w, h);
     this.maskBlur = createRenderTarget(gl, w, h);
+    this.maskScratch = createRenderTarget(gl, w, h);
     this.workA = createRenderTarget(gl, w, h);
     this.workB = createRenderTarget(gl, w, h);
   }
@@ -229,13 +231,13 @@ void main(){ vec2 t=u_texel*1.5; vec4 s=texture(u_tex,v_uv+vec2(t.x,t.y))+textur
     gl.bindVertexArray(this.fsVao);
     gl.useProgram(this.blurProg);
     gl.uniform2f(this.ub.u_texel, 1 / this.w, 1 / this.h);
-    gl.bindFramebuffer(gl.FRAMEBUFFER, this.workB!.fbo);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, this.maskScratch!.fbo);
     gl.activeTexture(gl.TEXTURE0);
     gl.bindTexture(gl.TEXTURE_2D, this.maskGeom!.tex);
     gl.uniform1i(this.ub.u_tex, 0);
     gl.drawArrays(gl.TRIANGLES, 0, 3);
     gl.bindFramebuffer(gl.FRAMEBUFFER, this.maskBlur!.fbo);
-    gl.bindTexture(gl.TEXTURE_2D, this.workB!.tex);
+    gl.bindTexture(gl.TEXTURE_2D, this.maskScratch!.tex);
     gl.drawArrays(gl.TRIANGLES, 0, 3);
   }
 
