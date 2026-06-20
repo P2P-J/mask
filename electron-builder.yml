@@ -20,3 +20,5 @@ publish:
   provider: github
   owner: P2P-J
   repo: mask
+  # draft가 아닌 정식 릴리스로 바로 게시 → 친구가 즉시 다운로드 가능
+  releaseType: release
