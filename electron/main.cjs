@@ -28,6 +28,10 @@ function createWindow() {
   } else {
     win.loadFile(path.join(__dirname, "..", "dist", "index.html"));
   }
+
+  // 외부 내비게이션/새 창 차단(file:// 보안 컨텍스트 유지)
+  win.webContents.setWindowOpenHandler(() => ({ action: "deny" }));
+  win.webContents.on("will-navigate", (e) => e.preventDefault());
 }
 
 app.whenReady().then(() => {
