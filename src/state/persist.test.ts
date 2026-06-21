@@ -13,4 +13,10 @@ describe("persist", () => {
     expect(deserialize("null")).toBeNull();
     expect(deserialize('{"scenes":[]}')).toBeNull(); // scenes 비면 무효
   });
+
+  it("빈 레이어 배열을 가진 씬은 거부(null)", () => {
+    const s = defaultState();
+    s.scenes[0].layers = [];
+    expect(deserialize(serialize(s))).toBeNull();
+  });
 });

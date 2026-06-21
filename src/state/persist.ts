@@ -13,6 +13,7 @@ export function deserialize(raw: string): AppState | null {
     const layersOk = obj.scenes.every(
       (sc) =>
         Array.isArray(sc.layers) &&
+        sc.layers.length > 0 &&
         sc.layers.every((l) => l && typeof l.params === "object" && typeof l.id === "string")
     );
     if (!layersOk) return null;
