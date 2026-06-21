@@ -14,16 +14,23 @@ export class Tracker {
 
   async init(): Promise<void> {
     const fileset = await FilesetResolver.forVisionTasks(`${import.meta.env.BASE_URL}wasm`);
-    this.landmarker = await FaceLandmarker.createFromOptions(fileset, {
-      baseOptions: {
-        modelAssetPath: `${import.meta.env.BASE_URL}models/face_landmarker.task`,
-        delegate: "GPU",
-      },
-      runningMode: "VIDEO",
-      numFaces: 1,
-      outputFaceBlendshapes: false,
-      outputFacialTransformationMatrixes: false,
-    });
+    const create = (delegate: "GPU" | "CPU") =>
+      FaceLandmarker.createFromOptions(fileset, {
+        baseOptions: {
+          modelAssetPath: `${import.meta.env.BASE_URL}models/face_landmarker.task`,
+          delegate,
+        },
+        runningMode: "VIDEO",
+        numFaces: 1,
+        outputFaceBlendshapes: false,
+        outputFacialTransformationMatrixes: false,
+      });
+    try {
+      this.landmarker = await create("GPU");
+    } catch (e) {
+      console.warn("FaceLandmarker GPU delegate 실패 → CPU 폴백", e);
+      this.landmarker = await create("CPU");
+    }
   }
 
   detect(video: HTMLVideoElement, timestampMs: number): DetectResult {
