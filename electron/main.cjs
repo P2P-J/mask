@@ -3,6 +3,10 @@ const path = require("node:path");
 
 const isDev = process.env.ELECTRON_DEV === "1";
 
+// 창/작업표시줄 아이콘. 개발은 public/, 배포는 dist/(electron-builder files에 포함)에서 로드.
+// (Windows 패키지 .exe 아이콘 자체는 electron-builder의 win.icon=build/icon.ico가 담당)
+const windowIcon = path.join(__dirname, "..", isDev ? "public" : "dist", "icon.png");
+
 function createWindow() {
   const win = new BrowserWindow({
     width: 1280,
@@ -11,6 +15,7 @@ function createWindow() {
     minHeight: 640,
     backgroundColor: "#1e1f22",
     title: "Mask",
+    icon: windowIcon,
     webPreferences: {
       contextIsolation: true,
       nodeIntegration: false,

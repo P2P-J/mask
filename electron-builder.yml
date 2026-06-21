@@ -11,6 +11,7 @@ files:
 win:
   target:
     - nsis
+  icon: build/icon.ico
   artifactName: Mask-Setup-${version}.${ext}
 nsis:
   oneClick: false
