@@ -12,12 +12,19 @@ export class Segmenter {
 
   async init(): Promise<void> {
     const fileset = await FilesetResolver.forVisionTasks(`${import.meta.env.BASE_URL}wasm`);
-    this.seg = await ImageSegmenter.createFromOptions(fileset, {
-      baseOptions: { modelAssetPath: `${import.meta.env.BASE_URL}models/selfie_segmenter.tflite`, delegate: "GPU" },
-      runningMode: "VIDEO",
-      outputCategoryMask: false,
-      outputConfidenceMasks: true,
-    });
+    const create = (delegate: "GPU" | "CPU") =>
+      ImageSegmenter.createFromOptions(fileset, {
+        baseOptions: { modelAssetPath: `${import.meta.env.BASE_URL}models/selfie_segmenter.tflite`, delegate },
+        runningMode: "VIDEO",
+        outputCategoryMask: false,
+        outputConfidenceMasks: true,
+      });
+    try {
+      this.seg = await create("GPU");
+    } catch (e) {
+      console.warn("ImageSegmenter GPU delegate 실패 → CPU 폴백", e);
+      this.seg = await create("CPU");
+    }
   }
 
   // 인물 확률 마스크(0~255) 반환. 모델 미초기화/실패 시 null.
