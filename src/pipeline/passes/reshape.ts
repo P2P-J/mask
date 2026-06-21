@@ -36,6 +36,7 @@ export class ReshapePass implements FxPass {
   private h = 0;
   private u: Record<string, WebGLUniformLocation | null> = {};
   private shape: FaceShape | undefined;
+  private ramp = 0; // 검출 시작/소실 시 깜빡임 방지(0→1 페이드인)
 
   constructor(gl: WebGL2RenderingContext) {
     this.gl = gl;
@@ -66,11 +67,15 @@ export class ReshapePass implements FxPass {
     gl.bindTexture(gl.TEXTURE_2D, input);
     gl.uniform1i(this.u.u_tex, 0);
     if (landmarks) {
+      this.ramp = Math.min(1, this.ramp + 0.15);
       const d = buildDeformers(landmarks, params, this.shape);
+      // 변형량(defB=sx,sy,tx,ty)에만 램프 적용(위치/반경 defA는 유지)
+      if (this.ramp < 1) for (let i = 0; i < d.defB.length; i++) d.defB[i] *= this.ramp;
       gl.uniform1i(this.u.u_count, d.count);
       gl.uniform4fv(this.u.u_defA, d.defA);
       gl.uniform4fv(this.u.u_defB, d.defB);
     } else {
+      this.ramp = 0;
       gl.uniform1i(this.u.u_count, 0);
     }
     gl.drawArrays(gl.TRIANGLES, 0, 3);

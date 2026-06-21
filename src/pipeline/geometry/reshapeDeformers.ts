@@ -39,6 +39,10 @@ const bi = (p: Record<string, number>, k: string): number => ((p[k] ?? 50) - 50)
 
 export function buildDeformers(lm: NormalizedLandmark[], p: Record<string, number>, shape?: FaceShape): Deformers {
   const defs: Def[] = [];
+  // 과변형("녹음") 방지용 상한(정규화 좌표 기준)
+  const MAX_T = 0.02; // 최대 이동 ~2%
+  const MAX_S = 0.45; // 최대 스케일 델타
+  const clamp = (v: number, m: number): number => Math.max(-m, Math.min(m, v));
   const add = (
     c: [number, number],
     rx: number,
@@ -49,7 +53,17 @@ export function buildDeformers(lm: NormalizedLandmark[], p: Record<string, numbe
     ty = 0
   ): void => {
     if (Math.abs(sx) < 1e-5 && Math.abs(sy) < 1e-5 && Math.abs(tx) < 1e-5 && Math.abs(ty) < 1e-5) return;
-    if (defs.length < MAX_DEFORMERS) defs.push({ cx: c[0], cy: c[1], rx, ry, sx, sy, tx, ty });
+    if (defs.length < MAX_DEFORMERS)
+      defs.push({
+        cx: c[0],
+        cy: c[1],
+        rx,
+        ry,
+        sx: clamp(sx, MAX_S),
+        sy: clamp(sy, MAX_S),
+        tx: clamp(tx, MAX_T),
+        ty: clamp(ty, MAX_T),
+      });
   };
 
   const L = uv(lm, 234);

@@ -16,6 +16,7 @@ import { createCanvasFitter } from "../ui/layout/canvasFit";
 import { Onboarding } from "../ui/onboarding";
 import { SHAPE_LABEL_KO } from "../vision/faceAnalysis";
 import type { FaceProfile } from "../vision/faceAnalysis";
+import { LandmarkSmoother } from "../vision/landmarkSmoother";
 
 const glCanvas = document.getElementById("gl-canvas") as HTMLCanvasElement;
 const overlayCanvas = document.getElementById("overlay-canvas") as HTMLCanvasElement;
@@ -27,6 +28,7 @@ const fpsMeter = new FpsMeter(0.1);
 const latencyMeter = new LatencyMeter(0.1);
 const frameMeter = new LatencyMeter(0.1);
 const store = new Store();
+const smoother = new LandmarkSmoother(0.35);
 
 const onboarding = new Onboarding();
 
@@ -139,9 +141,10 @@ function loop(): void {
           /* 세그멘테이션 실패 무시 */
         }
       }
-      if (onboarding.active) { onboarding.feed(faces[0] ?? null); }
-      pipeline.render(current.video, onboarding.active ? activeLayers().map((l) => ({ ...l, enabled: false })) : activeLayers(), faces[0] ?? null);
-      overlay.draw(faces, store.get().overlayMesh);
+      const face = smoother.smooth(faces[0] ?? null); // 시간축 EMA로 떨림 완화
+      if (onboarding.active) { onboarding.feed(face); }
+      pipeline.render(current.video, onboarding.active ? activeLayers().map((l) => ({ ...l, enabled: false })) : activeLayers(), face);
+      overlay.draw(face ? [face] : [], store.get().overlayMesh);
     } catch (e) {
       controls.showError("추론/렌더 오류: " + (e as Error).message);
     }
