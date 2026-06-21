@@ -16,7 +16,6 @@ export class DockControls {
   private deviceEl = document.getElementById("device") as HTMLSelectElement;
   private resolutionEl = document.getElementById("resolution") as HTMLSelectElement;
   private fpsEl = document.getElementById("fps") as HTMLSelectElement;
-  private overlayEl = document.getElementById("overlay") as HTMLInputElement;
   private statsEl = document.getElementById("stats") as HTMLElement;
   private errorEl = document.getElementById("error") as HTMLElement;
   private liveFpsEl = document.getElementById("live-fps") as HTMLElement;
@@ -27,13 +26,10 @@ export class DockControls {
   private panicEl = document.getElementById("panic") as HTMLButtonElement;
 
   private fpsValue: number;
-  private overlayOn: boolean;
 
   constructor(cb: DockControlsCallbacks) {
     this.fpsValue = Number(this.fpsEl.value);
-    this.overlayOn = this.overlayEl.checked;
     this.fpsEl.addEventListener("change", () => { this.fpsValue = Number(this.fpsEl.value); cb.onSourceChange(); });
-    this.overlayEl.addEventListener("change", () => { this.overlayOn = this.overlayEl.checked; });
     this.deviceEl.addEventListener("change", () => cb.onSourceChange());
     this.resolutionEl.addEventListener("change", () => cb.onSourceChange());
     this.diagToggleEl.addEventListener("click", () => this.diagEl.classList.toggle("open"));
@@ -49,7 +45,6 @@ export class DockControls {
     this.panicEl.addEventListener("click", () => cb.onPanic());
   }
 
-  get overlayEnabled(): boolean { return this.overlayOn; }
   get resolution(): { width: number; height: number } { return parseResolution(this.resolutionEl.value); }
   get fps(): number { return this.fpsValue; }
   get deviceId(): string | undefined { return this.deviceEl.value || undefined; }

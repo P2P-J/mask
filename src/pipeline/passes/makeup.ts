@@ -201,6 +201,18 @@ void main(){ vec2 t=u_texel*1.5; vec4 s=texture(u_tex,v_uv+vec2(t.x,t.y))+textur
         ],
       });
     }
+    if (on("eyelash")) {
+      const le = p(159);
+      const re = p(386);
+      items.push({
+        key: "eyelash",
+        color: hexToRgb(colors.eyelash ?? "#1a1a1a"),
+        geoms: [
+          ellipseFan(le[0], le[1] + ew * 0.14, ew * 0.95, ew * 0.10),
+          ellipseFan(re[0], re[1] + ew * 0.14, ew * 0.95, ew * 0.10),
+        ],
+      });
+    }
     return items;
   }
 

@@ -79,3 +79,7 @@ export function removeScene(s: AppState, sceneId: string): AppState {
   const activeSceneId = s.activeSceneId === sceneId ? scenes[0].id : s.activeSceneId;
   return { ...s, scenes, activeSceneId };
 }
+
+export function setOverlayMesh(s: AppState, on: boolean): AppState {
+  return { ...s, overlayMesh: on };
+}

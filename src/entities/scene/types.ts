@@ -19,4 +19,5 @@ export interface AppState {
   activeSceneId: string;
   activeCategory: string;
   selectedLayerId: string;
+  overlayMesh: boolean;
 }

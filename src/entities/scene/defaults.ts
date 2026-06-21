@@ -36,10 +36,10 @@ export function defaultLayers(): Layer[] {
       name: "메이크업",
       category: "face",
       enabled: false,
-      params: { lipstick: 0, blush: 0, eyeshadow: 0, eyebrow: 0, liner: 0, contour: 0 },
+      params: { lipstick: 0, blush: 0, eyeshadow: 0, eyebrow: 0, liner: 0, contour: 0, eyelash: 0 },
       colors: {
         lipstick: "#c85a64", blush: "#e8918c", eyeshadow: "#a87a6e",
-        eyebrow: "#5a4636", liner: "#3a3030", contour: "#7a5a48",
+        eyebrow: "#5a4636", liner: "#3a3030", contour: "#7a5a48", eyelash: "#1a1a1a",
       },
     },
     {
@@ -89,5 +89,24 @@ export function defaultState(): AppState {
     activeSceneId: "scene-1",
     activeCategory: "face",
     selectedLayerId: "smoothing",
+    overlayMesh: true,
   };
+}
+
+export function mergeDefaults(s: AppState): AppState {
+  const defById = new Map(defaultLayers().map((l) => [l.id, l]));
+  const scenes = s.scenes.map((sc) => ({
+    ...sc,
+    layers: sc.layers.map((l) => {
+      const d = defById.get(l.id);
+      if (!d) return l;
+      return {
+        ...l,
+        params: { ...d.params, ...l.params },
+        colors: d.colors || l.colors ? { ...(d.colors ?? {}), ...(l.colors ?? {}) } : l.colors,
+        selects: d.selects || l.selects ? { ...(d.selects ?? {}), ...(l.selects ?? {}) } : l.selects,
+      };
+    }),
+  }));
+  return { ...s, scenes, overlayMesh: s.overlayMesh ?? true };
 }

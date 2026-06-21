@@ -1,5 +1,5 @@
 import type { AppState } from "./types";
-import { defaultState } from "./defaults";
+import { defaultState, mergeDefaults } from "./defaults";
 import { serialize, deserialize } from "./persist";
 
 const KEY = "mask.state.v10"; // v10: 배경 흐림 레이어(세그멘테이션)
@@ -12,7 +12,7 @@ export class Store {
 
   constructor() {
     const raw = typeof localStorage !== "undefined" ? localStorage.getItem(KEY) : null;
-    this.state = (raw && deserialize(raw)) || defaultState();
+    this.state = mergeDefaults((raw && deserialize(raw)) || defaultState());
   }
 
   get(): AppState {

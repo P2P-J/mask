@@ -5,7 +5,7 @@ import { Pipeline } from "../pipeline/pipeline";
 import { MeshOverlay } from "../ui/overlay/overlay";
 import { FpsMeter, LatencyMeter } from "../shared/metrics/metrics";
 import { Store } from "../entities/scene/store";
-import { getActiveScene } from "../entities/scene/reducer";
+import { getActiveScene, setOverlayMesh } from "../entities/scene/reducer";
 import { LAYER_ORDER } from "../entities/scene/defaults";
 import { DockControls } from "../ui/docks/dockControls";
 import { ScenesDock } from "../ui/docks/scenes";
@@ -48,6 +48,16 @@ new ScenesDock(store);
 new LayersDock(store);
 new EditorDock(store);
 initResizableDocks();
+
+const overlayToggle = document.getElementById("overlay-toggle") as HTMLButtonElement;
+function syncOverlayToggle(): void {
+  const on = store.get().overlayMesh;
+  overlayToggle.classList.toggle("on", on);
+  overlayToggle.setAttribute("aria-checked", String(on));
+}
+overlayToggle.addEventListener("click", () => store.update((st) => setOverlayMesh(st, !st.overlayMesh)));
+store.subscribe(syncOverlayToggle);
+syncOverlayToggle();
 
 // 캔버스를 표시 크기×DPR로 렌더(브라우저 축소 모아레 제거 + GPU 부하 감소)
 const fitter = createCanvasFitter(
@@ -119,7 +129,7 @@ function loop(): void {
         }
       }
       pipeline.render(current.video, activeLayers(), faces[0] ?? null);
-      overlay.draw(faces, controls.overlayEnabled);
+      overlay.draw(faces, store.get().overlayMesh);
     } catch (e) {
       controls.showError("추론/렌더 오류: " + (e as Error).message);
     }
