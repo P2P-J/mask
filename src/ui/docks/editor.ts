@@ -22,7 +22,7 @@ const LABELS: Record<string, string> = {
   lipstick: "립스틱", blush: "블러셔", eyeshadow: "아이섀도", eyebrow: "아이브로우",
   liner: "아이라이너", contour: "컨투어", eyelash: "속눈썹",
   intensity: "강도", preset: "프리셋",
-  blur: "배경 흐림",
+  blur: "배경 흐림", headSize: "머리 크기(소두)",
 };
 
 export class EditorDock {

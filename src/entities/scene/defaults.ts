@@ -68,10 +68,10 @@ export function defaultLayers(): Layer[] {
     },
     {
       id: "background",
-      name: "배경 흐림",
+      name: "배경/머리",
       category: "face",
       enabled: false,
-      params: { blur: 70 },
+      params: { blur: 70, headSize: 0 },
     },
   ];
 }

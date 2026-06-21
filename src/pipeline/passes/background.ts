@@ -8,8 +8,10 @@ import {
   type RenderTarget,
 } from "../../shared/gl/glUtils";
 import type { FxPass } from "../passes";
+import type { NormalizedLandmark } from "@mediapipe/tasks-vision";
 
 // 인물=선명, 배경=블러. 마스크는 세그멘테이션(top-down)이라 y 반전 샘플.
+// 소두(u_headScale<1): 인물 영역을 얼굴 중심 기준 축소 샘플 → 작아진 자리는 실제 배경으로 자연 채움.
 const COMPOSITE_FS = `#version 300 es
 precision highp float;
 in vec2 v_uv;
@@ -17,13 +19,17 @@ uniform sampler2D u_orig;
 uniform sampler2D u_blur;
 uniform sampler2D u_mask;
 uniform float u_amount;
+uniform vec2 u_center;
+uniform float u_headScale;
 out vec4 o;
 void main(){
-  vec3 orig = texture(u_orig, v_uv).rgb;
-  vec3 blur = texture(u_blur, v_uv).rgb;
-  float person = texture(u_mask, vec2(v_uv.x, 1.0 - v_uv.y)).r;
-  float bg = (1.0 - person) * u_amount;
-  o = vec4(mix(orig, blur, bg), 1.0);
+  vec2 puv = u_center + (v_uv - u_center) / u_headScale; // 인물 샘플 좌표(소두)
+  float person = texture(u_mask, vec2(puv.x, 1.0 - puv.y)).r;
+  vec3 personCol = texture(u_orig, puv).rgb;
+  vec3 origBg = texture(u_orig, v_uv).rgb;
+  vec3 blurBg = texture(u_blur, v_uv).rgb;
+  vec3 bgCol = mix(origBg, blurBg, u_amount);
+  o = vec4(mix(bgCol, personCol, person), 1.0);
 }`;
 
 const BG_OFFSETS = [0.0, 1.0, 2.0, 3.0, 3.0]; // 강한 배경 블러
@@ -52,7 +58,7 @@ export class BackgroundPass implements FxPass {
     this.maskTex = createTexture(gl);
     this.uPassTex = gl.getUniformLocation(this.passProg, "u_tex");
     for (const n of ["u_tex", "u_texel", "u_offset"]) this.ub[n] = gl.getUniformLocation(this.blurProg, n);
-    for (const n of ["u_orig", "u_blur", "u_mask", "u_amount"]) this.uc[n] = gl.getUniformLocation(this.compProg, n);
+    for (const n of ["u_orig", "u_blur", "u_mask", "u_amount", "u_center", "u_headScale"]) this.uc[n] = gl.getUniformLocation(this.compProg, n);
   }
 
   // 세그멘테이션 마스크 업로드(파이프라인이 매 프레임 호출). FLIP_Y 끄고 올림(데이터=top-down).
@@ -84,12 +90,21 @@ export class BackgroundPass implements FxPass {
   render(
     input: WebGLTexture,
     target: WebGLFramebuffer | null,
-    params: Record<string, number>
+    params: Record<string, number>,
+    landmarks?: NormalizedLandmark[] | null
   ): void {
     const gl = this.gl;
     if (!this.a || !this.b || !this.hasMask) {
       this.blit(input, target);
       return;
+    }
+    // 소두: 얼굴 중심(코끝 lm1) 기준 인물 축소. headSize 0~100 → 최대 18% 축소.
+    const hs = (params.headSize ?? 0) / 100;
+    let cx = 0.5, cy = 0.5, headScale = 1;
+    if (landmarks && landmarks[1] && hs > 0.001) {
+      cx = landmarks[1].x;
+      cy = 1 - landmarks[1].y;
+      headScale = 1 - hs * 0.18;
     }
     gl.disable(gl.BLEND);
 
@@ -125,6 +140,8 @@ export class BackgroundPass implements FxPass {
     gl.bindTexture(gl.TEXTURE_2D, this.maskTex);
     gl.uniform1i(this.uc.u_mask, 2);
     gl.uniform1f(this.uc.u_amount, (params.blur ?? 0) / 100);
+    gl.uniform2f(this.uc.u_center, cx, cy);
+    gl.uniform1f(this.uc.u_headScale, headScale);
     gl.drawArrays(gl.TRIANGLES, 0, 3);
     gl.activeTexture(gl.TEXTURE0);
   }
