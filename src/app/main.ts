@@ -29,6 +29,7 @@ let current: camera.CameraInfo | null = null;
 let running = false;
 let requestedLabel = "";
 let lastFrameTime = 0;
+let lastDiagTime = 0;
 let lastDetectTs = 0; // MediaPipe VIDEO 모드는 단조증가 타임스탬프 필요
 let correctionOn = true; // 보정 On/Off
 let showOriginal = false; // Before/After: true면 원본
@@ -124,16 +125,19 @@ function loop(): void {
     }
     fpsMeter.tick(frameStart);
     frameMeter.record(performance.now() - frameStart);
-    const mem = (performance as unknown as { memory?: { usedJSHeapSize: number } }).memory;
-    controls.updateDiagnostics({
-      fps: fpsMeter.value(),
-      inferenceMs: latencyMeter.avg(),
-      frameMs: frameMeter.avg(),
-      requested: requestedLabel,
-      actual: `${current.actualWidth}x${current.actualHeight} @${Math.round(current.actualFps)}`,
-      faceDetected,
-      jsHeapMb: mem ? mem.usedJSHeapSize / 1048576 : null,
-    });
+    if (now - lastDiagTime >= 250) {
+      lastDiagTime = now;
+      const mem = (performance as unknown as { memory?: { usedJSHeapSize: number } }).memory;
+      controls.updateDiagnostics({
+        fps: fpsMeter.value(),
+        inferenceMs: latencyMeter.avg(),
+        frameMs: frameMeter.avg(),
+        requested: requestedLabel,
+        actual: `${current.actualWidth}x${current.actualHeight} @${Math.round(current.actualFps)}`,
+        faceDetected,
+        jsHeapMb: mem ? mem.usedJSHeapSize / 1048576 : null,
+      });
+    }
   }
   requestAnimationFrame(loop);
 }

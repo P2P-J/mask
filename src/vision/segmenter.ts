@@ -9,6 +9,7 @@ export interface SegResult {
 // MediaPipe Selfie Segmentation — 인물/배경 분리 마스크.
 export class Segmenter {
   private seg: ImageSegmenter | null = null;
+  private out: Uint8Array | null = null;
 
   async init(): Promise<void> {
     const fileset = await FilesetResolver.forVisionTasks(`${import.meta.env.BASE_URL}wasm`);
@@ -34,7 +35,8 @@ export class Segmenter {
     const mask = result.confidenceMasks?.[0];
     if (!mask) return null;
     const f = mask.getAsFloat32Array();
-    const out = new Uint8Array(f.length);
+    if (!this.out || this.out.length !== f.length) this.out = new Uint8Array(f.length);
+    const out = this.out;
     for (let i = 0; i < f.length; i++) out[i] = Math.round(f[i] * 255);
     const width = mask.width;
     const height = mask.height;

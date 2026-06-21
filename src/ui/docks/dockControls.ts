@@ -26,10 +26,16 @@ export class DockControls {
   private beforeAfterEl = document.getElementById("before-after") as HTMLButtonElement;
   private panicEl = document.getElementById("panic") as HTMLButtonElement;
 
+  private fpsValue: number;
+  private overlayOn: boolean;
+
   constructor(cb: DockControlsCallbacks) {
+    this.fpsValue = Number(this.fpsEl.value);
+    this.overlayOn = this.overlayEl.checked;
+    this.fpsEl.addEventListener("change", () => { this.fpsValue = Number(this.fpsEl.value); cb.onSourceChange(); });
+    this.overlayEl.addEventListener("change", () => { this.overlayOn = this.overlayEl.checked; });
     this.deviceEl.addEventListener("change", () => cb.onSourceChange());
     this.resolutionEl.addEventListener("change", () => cb.onSourceChange());
-    this.fpsEl.addEventListener("change", () => cb.onSourceChange());
     this.diagToggleEl.addEventListener("click", () => this.diagEl.classList.toggle("open"));
     this.correctionEl.classList.add("active"); // 기본 보정 ON
     this.correctionEl.addEventListener("click", () => {
@@ -43,9 +49,9 @@ export class DockControls {
     this.panicEl.addEventListener("click", () => cb.onPanic());
   }
 
-  get overlayEnabled(): boolean { return this.overlayEl.checked; }
+  get overlayEnabled(): boolean { return this.overlayOn; }
   get resolution(): { width: number; height: number } { return parseResolution(this.resolutionEl.value); }
-  get fps(): number { return Number(this.fpsEl.value); }
+  get fps(): number { return this.fpsValue; }
   get deviceId(): string | undefined { return this.deviceEl.value || undefined; }
 
   setDevices(devices: MediaDeviceInfo[]): void {
