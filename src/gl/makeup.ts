@@ -124,7 +124,7 @@ void main(){ vec2 t=u_texel*1.5; vec4 s=texture(u_tex,v_uv+vec2(t.x,t.y))+textur
     colors?: Record<string, string>
   ): void {
     const gl = this.gl;
-    if (!this.maskGeom || !this.maskBlur || !this.workA || !this.workB || !landmarks) {
+    if (!this.maskGeom || !this.maskBlur || !this.workA || !this.workB || !this.maskScratch || !landmarks) {
       this.blit(input, target);
       return;
     }
