@@ -81,3 +81,50 @@ void main(){
   v_uv = a_pos * 0.5 + 0.5;
   gl_Position = vec4(a_pos, 0.0, 1.0);
 }`;
+
+// 패스스루 프래그먼트(텍스처 그대로 출력) — 여러 패스 공용
+export const PASSTHROUGH_FS = `#version 300 es
+precision highp float;
+in vec2 v_uv;
+uniform sampler2D u_tex;
+out vec4 o;
+void main(){ o = texture(u_tex, v_uv); }`;
+
+// 랜드마크 팬/메시 래스터화용 정점 셰이더 — 여러 마스크 패스 공용
+export const GEO_VS = `#version 300 es
+layout(location=0) in vec2 a_pos;
+void main(){ gl_Position = vec4(a_pos, 0.0, 1.0); }`;
+
+// Kawase 4-tap 블러 — smoothing/background 공용
+export const BLUR_FS = `#version 300 es
+precision highp float;
+in vec2 v_uv;
+uniform sampler2D u_tex;
+uniform vec2 u_texel;
+uniform float u_offset;
+out vec4 o;
+void main(){
+  vec2 t = u_texel * (u_offset + 0.5);
+  vec4 s = texture(u_tex, v_uv + vec2( t.x,  t.y));
+  s += texture(u_tex, v_uv + vec2(-t.x,  t.y));
+  s += texture(u_tex, v_uv + vec2( t.x, -t.y));
+  s += texture(u_tex, v_uv + vec2(-t.x, -t.y));
+  o = s * 0.25;
+}`;
+
+// 동적 지오메트리(랜드마크 팬) VAO — attrib0=vec2, 매 프레임 bufferData로 갱신
+export function createDynamicGeomVAO(gl: WebGL2RenderingContext): {
+  vao: WebGLVertexArrayObject;
+  buf: WebGLBuffer;
+} {
+  const vao = gl.createVertexArray();
+  if (!vao) throw new Error("동적 VAO 생성 실패");
+  gl.bindVertexArray(vao);
+  const buf = gl.createBuffer();
+  if (!buf) throw new Error("동적 버퍼 생성 실패");
+  gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+  gl.enableVertexAttribArray(0);
+  gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
+  gl.bindVertexArray(null);
+  return { vao, buf };
+}

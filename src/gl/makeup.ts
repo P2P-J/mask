@@ -2,7 +2,10 @@ import {
   compileProgram,
   createFullscreenVAO,
   createRenderTarget,
+  createDynamicGeomVAO,
   FULLSCREEN_VS,
+  PASSTHROUGH_FS,
+  GEO_VS,
   type RenderTarget,
 } from "./glUtils";
 import { buildFan, ellipseFan } from "./faceMaskGeometry";
@@ -10,19 +13,10 @@ import { LIPS, LEFT_BROW, RIGHT_BROW } from "./faceRegions";
 import type { FxPass } from "./passes";
 import type { NormalizedLandmark } from "@mediapipe/tasks-vision";
 
-const GEO_VS = `#version 300 es
-layout(location=0) in vec2 a_pos;
-void main(){ gl_Position = vec4(a_pos, 0.0, 1.0); }`;
 const GEO_FS = `#version 300 es
 precision highp float;
 out vec4 o;
 void main(){ o = vec4(1.0); }`;
-const PASS_FS = `#version 300 es
-precision highp float;
-in vec2 v_uv;
-uniform sampler2D u_tex;
-out vec4 o;
-void main(){ o = texture(u_tex, v_uv); }`;
 
 // 부위 마스크 영역에 색을 멀티플라이 블렌드로 입힘(질감 보존, 강도 조절).
 const TINT_FS = `#version 300 es
@@ -76,15 +70,11 @@ export class MakeupPass implements FxPass {
   constructor(gl: WebGL2RenderingContext) {
     this.gl = gl;
     this.fsVao = createFullscreenVAO(gl);
-    this.geoVao = gl.createVertexArray()!;
-    gl.bindVertexArray(this.geoVao);
-    this.geoBuf = gl.createBuffer()!;
-    gl.bindBuffer(gl.ARRAY_BUFFER, this.geoBuf);
-    gl.enableVertexAttribArray(0);
-    gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
-    gl.bindVertexArray(null);
+    const { vao, buf } = createDynamicGeomVAO(gl);
+    this.geoVao = vao;
+    this.geoBuf = buf;
     this.geoProg = compileProgram(gl, GEO_VS, GEO_FS);
-    this.passProg = compileProgram(gl, FULLSCREEN_VS, PASS_FS);
+    this.passProg = compileProgram(gl, FULLSCREEN_VS, PASSTHROUGH_FS);
     this.blurProg = compileProgram(
       gl,
       FULLSCREEN_VS,

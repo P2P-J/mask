@@ -2,7 +2,10 @@ import {
   compileProgram,
   createFullscreenVAO,
   createRenderTarget,
+  createDynamicGeomVAO,
   FULLSCREEN_VS,
+  GEO_VS,
+  BLUR_FS,
   type RenderTarget,
 } from "./glUtils";
 import { buildFan, buildMeshVerts } from "./faceMaskGeometry";
@@ -11,31 +14,11 @@ import type { FxPass } from "./passes";
 import type { NormalizedLandmark } from "@mediapipe/tasks-vision";
 
 // 마스크 지오메트리(랜드마크 윤곽 → 삼각형) 셰이더
-const GEO_VS = `#version 300 es
-layout(location=0) in vec2 a_pos;
-void main(){ gl_Position = vec4(a_pos, 0.0, 1.0); }`;
 const GEO_FS = `#version 300 es
 precision highp float;
 uniform float u_val;
 out vec4 o;
 void main(){ o = vec4(vec3(u_val), 1.0); }`;
-
-// Kawase 블러(4탭) — 비디오/마스크 페더 공용
-const BLUR_FS = `#version 300 es
-precision highp float;
-in vec2 v_uv;
-uniform sampler2D u_tex;
-uniform vec2 u_texel;
-uniform float u_offset;
-out vec4 o;
-void main(){
-  vec2 t = u_texel * (u_offset + 0.5);
-  vec4 s = texture(u_tex, v_uv + vec2( t.x,  t.y));
-  s += texture(u_tex, v_uv + vec2(-t.x,  t.y));
-  s += texture(u_tex, v_uv + vec2( t.x, -t.y));
-  s += texture(u_tex, v_uv + vec2(-t.x, -t.y));
-  o = s * 0.25;
-}`;
 
 // 합성: 마스크 영역에 저주파 스무딩 + 고주파 텍스처 복원, 약한 스킨톤 게이트
 const COMPOSITE_FS = `#version 300 es
@@ -117,14 +100,9 @@ export class SmoothingPass implements FxPass {
   constructor(gl: WebGL2RenderingContext) {
     this.gl = gl;
     this.fsVao = createFullscreenVAO(gl);
-    // 동적 지오메트리 VAO(랜드마크 팬 정점, 매 프레임 갱신)
-    this.geoVao = gl.createVertexArray()!;
-    gl.bindVertexArray(this.geoVao);
-    this.geoBuf = gl.createBuffer()!;
-    gl.bindBuffer(gl.ARRAY_BUFFER, this.geoBuf);
-    gl.enableVertexAttribArray(0);
-    gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
-    gl.bindVertexArray(null);
+    const { vao, buf } = createDynamicGeomVAO(gl);
+    this.geoVao = vao;
+    this.geoBuf = buf;
 
     this.geoProg = compileProgram(gl, GEO_VS, GEO_FS);
     this.blurProg = compileProgram(gl, FULLSCREEN_VS, BLUR_FS);

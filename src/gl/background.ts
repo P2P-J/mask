@@ -3,32 +3,11 @@ import {
   createRenderTarget,
   createTexture,
   FULLSCREEN_VS,
+  PASSTHROUGH_FS,
+  BLUR_FS,
   type RenderTarget,
 } from "./glUtils";
 import type { FxPass } from "./passes";
-
-const PASS_FS = `#version 300 es
-precision highp float;
-in vec2 v_uv;
-uniform sampler2D u_tex;
-out vec4 o;
-void main(){ o = texture(u_tex, v_uv); }`;
-
-const BLUR_FS = `#version 300 es
-precision highp float;
-in vec2 v_uv;
-uniform sampler2D u_tex;
-uniform vec2 u_texel;
-uniform float u_offset;
-out vec4 o;
-void main(){
-  vec2 t = u_texel * (u_offset + 0.5);
-  vec4 s = texture(u_tex, v_uv + vec2( t.x,  t.y));
-  s += texture(u_tex, v_uv + vec2(-t.x,  t.y));
-  s += texture(u_tex, v_uv + vec2( t.x, -t.y));
-  s += texture(u_tex, v_uv + vec2(-t.x, -t.y));
-  o = s * 0.25;
-}`;
 
 // 인물=선명, 배경=블러. 마스크는 세그멘테이션(top-down)이라 y 반전 샘플.
 const COMPOSITE_FS = `#version 300 es
@@ -67,7 +46,7 @@ export class BackgroundPass implements FxPass {
 
   constructor(gl: WebGL2RenderingContext) {
     this.gl = gl;
-    this.passProg = compileProgram(gl, FULLSCREEN_VS, PASS_FS);
+    this.passProg = compileProgram(gl, FULLSCREEN_VS, PASSTHROUGH_FS);
     this.blurProg = compileProgram(gl, FULLSCREEN_VS, BLUR_FS);
     this.compProg = compileProgram(gl, FULLSCREEN_VS, COMPOSITE_FS);
     this.maskTex = createTexture(gl);

@@ -2,7 +2,10 @@ import {
   compileProgram,
   createFullscreenVAO,
   createRenderTarget,
+  createDynamicGeomVAO,
   FULLSCREEN_VS,
+  PASSTHROUGH_FS,
+  GEO_VS,
   type RenderTarget,
 } from "./glUtils";
 import { buildFan } from "./faceMaskGeometry";
@@ -10,19 +13,10 @@ import { LEFT_EYE, RIGHT_EYE } from "./faceRegions";
 import type { FxPass } from "./passes";
 import type { NormalizedLandmark } from "@mediapipe/tasks-vision";
 
-const GEO_VS = `#version 300 es
-layout(location=0) in vec2 a_pos;
-void main(){ gl_Position = vec4(a_pos, 0.0, 1.0); }`;
 const GEO_FS = `#version 300 es
 precision highp float;
 out vec4 o;
 void main(){ o = vec4(1.0); }`;
-const PASS_FS = `#version 300 es
-precision highp float;
-in vec2 v_uv;
-uniform sampler2D u_tex;
-out vec4 o;
-void main(){ o = texture(u_tex, v_uv); }`;
 
 // 눈 밝히기(눈 영역) + 애교살(눈밑 얇은 밴드 하이라이트)
 const EYE_FS = `#version 300 es
@@ -66,15 +60,11 @@ export class EyeDetailPass implements FxPass {
   constructor(gl: WebGL2RenderingContext) {
     this.gl = gl;
     this.fsVao = createFullscreenVAO(gl);
-    this.geoVao = gl.createVertexArray()!;
-    gl.bindVertexArray(this.geoVao);
-    this.geoBuf = gl.createBuffer()!;
-    gl.bindBuffer(gl.ARRAY_BUFFER, this.geoBuf);
-    gl.enableVertexAttribArray(0);
-    gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
-    gl.bindVertexArray(null);
+    const { vao, buf } = createDynamicGeomVAO(gl);
+    this.geoVao = vao;
+    this.geoBuf = buf;
     this.geoProg = compileProgram(gl, GEO_VS, GEO_FS);
-    this.passProg = compileProgram(gl, FULLSCREEN_VS, PASS_FS);
+    this.passProg = compileProgram(gl, FULLSCREEN_VS, PASSTHROUGH_FS);
     this.compProg = compileProgram(gl, FULLSCREEN_VS, EYE_FS);
     this.uPassTex = gl.getUniformLocation(this.passProg, "u_tex");
     for (const n of ["u_orig", "u_eyeMask", "u_brighten", "u_aegyo", "u_aegyoL", "u_aegyoR", "u_aegyoRad"])

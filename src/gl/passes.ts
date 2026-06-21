@@ -1,4 +1,4 @@
-import { compileProgram, FULLSCREEN_VS } from "./glUtils";
+import { compileProgram, FULLSCREEN_VS, PASSTHROUGH_FS } from "./glUtils";
 import { colorUniforms } from "./mapping";
 import type { NormalizedLandmark } from "@mediapipe/tasks-vision";
 import { SmoothingPass } from "./smoothing";
@@ -23,13 +23,6 @@ export interface FxPass {
     selects?: Record<string, { value: string; options: string[] }>
   ): void;
 }
-
-const PASSTHROUGH_FS = `#version 300 es
-precision highp float;
-in vec2 v_uv;
-uniform sampler2D u_tex;
-out vec4 o;
-void main(){ o = texture(u_tex, v_uv); }`;
 
 const COLOR_FS = `#version 300 es
 precision highp float;
@@ -136,7 +129,6 @@ export class ColorPass implements FxPass {
   }
 }
 
-// Plan B Task 3에서 smoothing을 실제 SmoothingPass로 교체. 지금은 패스스루.
 export function createPasses(gl: WebGL2RenderingContext): Record<string, FxPass> {
   return {
     passthrough: new PassthroughPass(gl),
