@@ -29,6 +29,7 @@ let current: camera.CameraInfo | null = null;
 let running = false;
 let requestedLabel = "";
 let lastFrameTime = 0;
+let lastDetectTs = 0; // MediaPipe VIDEO 모드는 단조증가 타임스탬프 필요
 let correctionOn = true; // 보정 On/Off
 let showOriginal = false; // Before/After: true면 원본
 
@@ -97,9 +98,11 @@ function loop(): void {
     }
     lastFrameTime = now;
     const frameStart = now;
+    const detectTs = Math.max(frameStart, lastDetectTs + 1);
+    lastDetectTs = detectTs;
     let faceDetected = false;
     try {
-      const { faces, inferenceMs } = tracker.detect(current.video, frameStart);
+      const { faces, inferenceMs } = tracker.detect(current.video, detectTs);
       faceDetected = faces.length > 0;
       latencyMeter.record(inferenceMs);
       // 배경 레이어가 켜져 있을 때만 세그멘테이션 실행(비용 큼)
@@ -108,7 +111,7 @@ function loop(): void {
         getActiveScene(store.get()).layers.some((l) => l.id === "background" && l.enabled);
       if (bgOn) {
         try {
-          const seg = segmenter.segment(current.video, frameStart);
+          const seg = segmenter.segment(current.video, detectTs);
           if (seg) pipeline.updateSegMask(seg.data, seg.width, seg.height);
         } catch {
           /* 세그멘테이션 실패 무시 */
