@@ -18,6 +18,7 @@ nsis:
   oneClick: false
   perMachine: false
   allowToChangeInstallationDirectory: true
+  differentialPackage: false # blockmap 생성 안 함(차등업데이트 미사용) → 릴리스 중복 방지
 publish:
   provider: github
   owner: P2P-J
