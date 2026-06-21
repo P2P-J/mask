@@ -2,6 +2,7 @@ import { compileProgram, FULLSCREEN_VS } from "../../shared/gl/glUtils";
 import { buildDeformers, MAX_DEFORMERS } from "../geometry/reshapeDeformers";
 import type { FxPass } from "../passes";
 import type { NormalizedLandmark } from "@mediapipe/tasks-vision";
+import type { FaceShape } from "../../vision/faceAnalysis";
 
 // 다중 deformer 역워프: 각 화소에서 영향 합산 후 입력을 v_uv - disp 위치에서 샘플.
 const RESHAPE_FS = `#version 300 es
@@ -34,11 +35,16 @@ export class ReshapePass implements FxPass {
   private w = 0;
   private h = 0;
   private u: Record<string, WebGLUniformLocation | null> = {};
+  private shape: FaceShape | undefined;
 
   constructor(gl: WebGL2RenderingContext) {
     this.gl = gl;
     this.prog = compileProgram(gl, FULLSCREEN_VS, RESHAPE_FS);
     for (const n of ["u_tex", "u_count", "u_defA", "u_defB"]) this.u[n] = gl.getUniformLocation(this.prog, n);
+  }
+
+  setShape(s: FaceShape | undefined): void {
+    this.shape = s;
   }
 
   resize(w: number, h: number): void {
@@ -60,7 +66,7 @@ export class ReshapePass implements FxPass {
     gl.bindTexture(gl.TEXTURE_2D, input);
     gl.uniform1i(this.u.u_tex, 0);
     if (landmarks) {
-      const d = buildDeformers(landmarks, params);
+      const d = buildDeformers(landmarks, params, this.shape);
       gl.uniform1i(this.u.u_count, d.count);
       gl.uniform4fv(this.u.u_defA, d.defA);
       gl.uniform4fv(this.u.u_defB, d.defB);

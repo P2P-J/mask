@@ -122,3 +122,11 @@ input[type="range"]::-moz-range-thumb { width: 18px; height: 18px; border: none;
 .tds-switch.on { background: var(--accent); }
 .tds-switch.on::after { transform: translateX(14px); }
 .tds-switch:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.onboard { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,.55); backdrop-filter: blur(3px); z-index: 5; }
+.onboard.hidden { display: none; }
+.onboard-card { background: var(--surface); border: 1px solid var(--divider); border-radius: var(--radius-lg); padding: 22px 26px; text-align: center; width: 280px; box-shadow: var(--shadow); }
+.onboard-title { font-weight: 700; color: var(--text-strong); margin-bottom: 8px; }
+.onboard-msg { font-size: 13px; color: var(--text); margin-bottom: 14px; }
+.onboard-bar { height: 6px; border-radius: 999px; background: var(--surface-3); overflow: hidden; margin-bottom: 14px; }
+.onboard-fill { height: 100%; width: 0%; background: var(--accent); transition: width .1s; }

@@ -5,7 +5,7 @@ import { Pipeline } from "../pipeline/pipeline";
 import { MeshOverlay } from "../ui/overlay/overlay";
 import { FpsMeter, LatencyMeter } from "../shared/metrics/metrics";
 import { Store } from "../entities/scene/store";
-import { getActiveScene, setOverlayMesh } from "../entities/scene/reducer";
+import { getActiveScene, setOverlayMesh, setFaceProfile, applyRecommended } from "../entities/scene/reducer";
 import { LAYER_ORDER } from "../entities/scene/defaults";
 import { DockControls } from "../ui/docks/dockControls";
 import { ScenesDock } from "../ui/docks/scenes";
@@ -13,6 +13,9 @@ import { LayersDock } from "../ui/docks/layers";
 import { EditorDock } from "../ui/docks/editor";
 import { initResizableDocks } from "../ui/layout/resizable";
 import { createCanvasFitter } from "../ui/layout/canvasFit";
+import { Onboarding } from "../ui/onboarding";
+import { SHAPE_LABEL_KO } from "../vision/faceAnalysis";
+import type { FaceProfile } from "../vision/faceAnalysis";
 
 const glCanvas = document.getElementById("gl-canvas") as HTMLCanvasElement;
 const overlayCanvas = document.getElementById("overlay-canvas") as HTMLCanvasElement;
@@ -24,6 +27,14 @@ const fpsMeter = new FpsMeter(0.1);
 const latencyMeter = new LatencyMeter(0.1);
 const frameMeter = new LatencyMeter(0.1);
 const store = new Store();
+
+const onboarding = new Onboarding();
+
+function applyProfile(profile: FaceProfile): void {
+  store.update((st) => applyRecommended(setFaceProfile(st, profile), profile.recommended));
+  pipeline.setFaceShape(profile.shape);
+  showToast(`분석 완료: ${SHAPE_LABEL_KO[profile.shape]}`);
+}
 
 let current: camera.CameraInfo | null = null;
 let running = false;
@@ -128,7 +139,8 @@ function loop(): void {
           /* 세그멘테이션 실패 무시 */
         }
       }
-      pipeline.render(current.video, activeLayers(), faces[0] ?? null);
+      if (onboarding.active) { onboarding.feed(faces[0] ?? null); }
+      pipeline.render(current.video, onboarding.active ? activeLayers().map((l) => ({ ...l, enabled: false })) : activeLayers(), faces[0] ?? null);
       overlay.draw(faces, store.get().overlayMesh);
     } catch (e) {
       controls.showError("추론/렌더 오류: " + (e as Error).message);
@@ -163,6 +175,11 @@ async function main(): Promise<void> {
     await restart();
     controls.setDevices(await camera.listDevices());
     running = true;
+    if (store.get().faceProfile) {
+      pipeline.setFaceShape(store.get().faceProfile!.shape);
+    } else {
+      onboarding.start(applyProfile);
+    }
     requestAnimationFrame(loop);
   } catch (e) {
     controls.showError("초기화 실패: " + (e as Error).message);
@@ -170,3 +187,5 @@ async function main(): Promise<void> {
 }
 
 void main();
+
+(document.getElementById("reanalyze") as HTMLElement).addEventListener("click", () => onboarding.start(applyProfile));

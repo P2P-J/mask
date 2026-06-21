@@ -29,6 +29,14 @@
     <div id="stage">
       <canvas id="gl-canvas"></canvas>
       <canvas id="overlay-canvas"></canvas>
+      <div id="onboarding" class="onboard hidden">
+        <div class="onboard-card">
+          <div class="onboard-title">얼굴 분석</div>
+          <div class="onboard-msg" id="onboard-msg">얼굴을 정면으로 맞춰주세요</div>
+          <div class="onboard-bar"><div class="onboard-fill" id="onboard-fill"></div></div>
+          <button class="cta ghost" id="onboard-cancel">취소</button>
+        </div>
+      </div>
       <div class="live-badge"><span class="live-dot"></span><span id="live-fps">— fps</span></div>
       <div id="error"></div>
       <div id="diagnostics">
@@ -60,6 +68,7 @@
           <button class="cta ghost" id="toggle-correction">보정 On/Off</button>
           <button class="cta ghost" id="before-after">Before/After</button>
           <button class="cta ghost" id="panic">패닉</button>
+          <button class="cta ghost" id="reanalyze">얼굴 다시 분석</button>
           <div style="display:flex;justify-content:space-between;align-items:center;font-size:13px;color:var(--text);margin:5px 0;"><span>메시 오버레이</span><button id="overlay-toggle" class="tds-switch" type="button" role="switch" aria-checked="true"></button></div>
         </div>
       </section>

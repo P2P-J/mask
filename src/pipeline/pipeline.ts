@@ -6,8 +6,10 @@ import {
 } from "../shared/gl/glUtils";
 import { createPasses, type FxPass } from "./passes";
 import { BackgroundPass } from "./passes/background";
+import { ReshapePass } from "./passes/reshape";
 import type { Layer } from "../entities/scene/types";
 import type { NormalizedLandmark } from "@mediapipe/tasks-vision";
+import type { FaceShape } from "../vision/faceAnalysis";
 
 export class Pipeline {
   private gl: WebGL2RenderingContext;
@@ -31,6 +33,11 @@ export class Pipeline {
   updateSegMask(data: Uint8Array, mw: number, mh: number): void {
     const bg = this.passes.background;
     if (bg instanceof BackgroundPass) bg.setMask(data, mw, mh);
+  }
+
+  setFaceShape(shape: FaceShape | undefined): void {
+    const r = this.passes.reshape;
+    if (r instanceof ReshapePass) r.setShape(shape);
   }
 
   resize(w: number, h: number): void {

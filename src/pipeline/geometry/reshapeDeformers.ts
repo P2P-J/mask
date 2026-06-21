@@ -1,4 +1,5 @@
 import type { NormalizedLandmark } from "@mediapipe/tasks-vision";
+import type { FaceShape } from "../../vision/faceAnalysis";
 
 // 이방성·부드러운 필드 기반 디테일 리쉐이프.
 // deformer = 타원 영향영역(중심 c, 반경 rx/ry) 안에서 비례 스케일(sx,sy) + 평행이동(tx,ty).
@@ -36,7 +37,7 @@ function mid(a: [number, number], b: [number, number]): [number, number] {
 const uni = (p: Record<string, number>, k: string): number => (p[k] ?? 0) / 100;
 const bi = (p: Record<string, number>, k: string): number => ((p[k] ?? 50) - 50) / 50;
 
-export function buildDeformers(lm: NormalizedLandmark[], p: Record<string, number>): Deformers {
+export function buildDeformers(lm: NormalizedLandmark[], p: Record<string, number>, shape?: FaceShape): Deformers {
   const defs: Def[] = [];
   const add = (
     c: [number, number],
@@ -60,23 +61,26 @@ export function buildDeformers(lm: NormalizedLandmark[], p: Record<string, numbe
   const C: [number, number] = [(L[0] + R[0]) / 2, (TOP[1] + CHIN[1]) / 2];
   const leftEye = mid(uv(lm, 33), uv(lm, 133));
   const rightEye = mid(uv(lm, 263), uv(lm, 362));
-  const eyeY = leftEye[1];
   const ew = d2(uv(lm, 33), uv(lm, 133));
 
   // ── 얼굴형 (전체 비례 필드 → 밸런스 유지) ──
-  add(C, W * 0.78, H * 0.9, -uni(p, "slim") * 0.26, 0); // 갸름(가로 비례 압축)
-  add(C, W * 0.95, H * 1.0, -uni(p, "faceSize") * 0.16, -uni(p, "faceSize") * 0.16); // 작은 얼굴
-  add([C[0], eyeY], W * 0.72, H * 0.42, -uni(p, "cheekbone") * 0.2, 0); // 광대 축소(상안면 가로)
-  add([C[0], TOP[1]], W * 0.6, H * 0.5, 0, 0, 0, -uni(p, "forehead") * H * 0.07); // 이마 축소
+  add(C, W * 0.78, H * 0.9, -uni(p, "slim") * 0.26 * shapeScale(shape, "slim"), 0); // 갸름(가로 비례 압축)
+  add(C, W * 0.95, H * 1.0, -uni(p, "faceSize") * 0.16 * shapeScale(shape, "faceSize"), -uni(p, "faceSize") * 0.16 * shapeScale(shape, "faceSize")); // 작은 얼굴
+  // 광대 축소: 좌우 광대 정점(50/280)을 각각 안쪽으로
+  const cbk = uni(p, "cheekbone") * 0.22 * shapeScale(shape, "cheekbone");
+  const cbL = uv(lm, 50), cbR = uv(lm, 280);
+  add(cbL, W * 0.32, H * 0.3, 0, 0, +cbk * W * 0.5, 0);
+  add(cbR, W * 0.32, H * 0.3, 0, 0, -cbk * W * 0.5, 0);
+  add([C[0], TOP[1]], W * 0.6, H * 0.5, 0, 0, 0, -uni(p, "forehead") * H * 0.07 * shapeScale(shape, "forehead")); // 이마 축소
 
   // ── 턱 ──
   {
     const JL = uv(lm, 172);
     const JR = uv(lm, 397);
-    const a = uni(p, "jaw");
+    const a = uni(p, "jaw") * shapeScale(shape, "jaw");
     add(JL, W * 0.45, H * 0.4, 0, 0, +a * W * 0.08, +a * H * 0.025); // V라인(좌 안+위)
     add(JR, W * 0.45, H * 0.4, 0, 0, -a * W * 0.08, +a * H * 0.025); // V라인(우)
-    add(CHIN, W * 0.5, H * 0.45, 0, 0, 0, bi(p, "chinLength") * -H * 0.07); // 턱 길이(>50 길게=아래)
+    add(CHIN, W * 0.5, H * 0.45, 0, 0, 0, bi(p, "chinLength") * -H * 0.07 * shapeScale(shape, "chinLength")); // 턱 길이(>50 길게=아래)
   }
 
   // ── 눈 ──
@@ -138,4 +142,15 @@ export function buildDeformers(lm: NormalizedLandmark[], p: Record<string, numbe
     defB[i * 4 + 3] = d.ty;
   });
   return { count: defs.length, defA, defB };
+}
+
+function shapeScale(shape: FaceShape | undefined, key: string): number {
+  if (!shape) return 1;
+  const m: Partial<Record<FaceShape, Record<string, number>>> = {
+    round: { slim: 1.25, cheekbone: 1.2, faceSize: 1.15 },
+    long: { forehead: 1.25, chinLength: 1.2 },
+    square: { jaw: 1.25, slim: 1.1 },
+    heart: { cheekbone: 1.1 },
+  };
+  return m[shape]?.[key] ?? 1;
 }
