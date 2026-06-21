@@ -1,3 +1,5 @@
+import type { FaceProfile } from "../../vision/faceAnalysis";
+
 export interface Layer {
   id: string; // 'smoothing' | 'color'
   name: string;
@@ -20,4 +22,5 @@ export interface AppState {
   activeCategory: string;
   selectedLayerId: string;
   overlayMesh: boolean;
+  faceProfile?: FaceProfile;
 }

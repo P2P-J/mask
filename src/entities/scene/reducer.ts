@@ -1,4 +1,5 @@
 import type { AppState, Layer, Scene } from "./types";
+import type { FaceProfile } from "../../vision/faceAnalysis";
 import { defaultLayers } from "./defaults";
 
 export function getActiveScene(s: AppState): Scene {
@@ -82,4 +83,15 @@ export function removeScene(s: AppState, sceneId: string): AppState {
 
 export function setOverlayMesh(s: AppState, on: boolean): AppState {
   return { ...s, overlayMesh: on };
+}
+
+export function setFaceProfile(s: AppState, profile: FaceProfile): AppState {
+  return { ...s, faceProfile: profile };
+}
+
+// 추천 리쉐이프 프리셋을 활성 장면 reshape 레이어에 병합 + 켜기
+export function applyRecommended(s: AppState, preset: Record<string, number>): AppState {
+  return mapActiveScene(s, (scene) =>
+    mapLayer(scene, "reshape", (l) => ({ ...l, enabled: true, params: { ...l.params, ...preset } }))
+  );
 }
