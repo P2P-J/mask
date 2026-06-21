@@ -1,22 +1,35 @@
 export function compileProgram(gl: WebGL2RenderingContext, vsSrc: string, fsSrc: string): WebGLProgram {
   const vs = compileShader(gl, gl.VERTEX_SHADER, vsSrc);
   const fs = compileShader(gl, gl.FRAGMENT_SHADER, fsSrc);
-  const prog = gl.createProgram()!;
+  const prog = gl.createProgram();
+  if (!prog) throw new Error("WebGL 프로그램 생성 실패(컨텍스트 손실?)");
   gl.attachShader(prog, vs);
   gl.attachShader(prog, fs);
   gl.linkProgram(prog);
   if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) {
-    throw new Error("프로그램 링크 실패: " + gl.getProgramInfoLog(prog));
+    const log = gl.getProgramInfoLog(prog);
+    gl.deleteProgram(prog);
+    gl.deleteShader(vs);
+    gl.deleteShader(fs);
+    throw new Error("프로그램 링크 실패: " + log);
   }
+  // 링크 후 셰이더 객체는 분리·삭제(GPU 컴파일 산출물 해제)
+  gl.detachShader(prog, vs);
+  gl.detachShader(prog, fs);
+  gl.deleteShader(vs);
+  gl.deleteShader(fs);
   return prog;
 }
 
 function compileShader(gl: WebGL2RenderingContext, type: number, src: string): WebGLShader {
-  const sh = gl.createShader(type)!;
+  const sh = gl.createShader(type);
+  if (!sh) throw new Error("WebGL 셰이더 생성 실패(컨텍스트 손실?)");
   gl.shaderSource(sh, src);
   gl.compileShader(sh);
   if (!gl.getShaderParameter(sh, gl.COMPILE_STATUS)) {
-    throw new Error("셰이더 컴파일 실패: " + gl.getShaderInfoLog(sh) + "\n" + src);
+    const log = gl.getShaderInfoLog(sh);
+    gl.deleteShader(sh);
+    throw new Error("셰이더 컴파일 실패: " + log + "\n" + src);
   }
   return sh;
 }
