@@ -1,13 +1,13 @@
-import { compileProgram, FULLSCREEN_VS, PASSTHROUGH_FS } from "./glUtils";
-import { colorUniforms } from "./mapping";
+import { compileProgram, FULLSCREEN_VS, PASSTHROUGH_FS } from "../shared/gl/glUtils";
+import { colorUniforms } from "../shared/gl/mapping";
 import type { NormalizedLandmark } from "@mediapipe/tasks-vision";
-import { SmoothingPass } from "./smoothing";
-import { TeethPass } from "./teeth";
-import { ReshapePass } from "./reshape";
-import { EyeDetailPass } from "./eyeDetail";
-import { MakeupPass } from "./makeup";
-import { FilterPass } from "./filter";
-import { BackgroundPass } from "./background";
+import { SmoothingPass } from "./passes/smoothing";
+import { TeethPass } from "./passes/teeth";
+import { ReshapePass } from "./passes/reshape";
+import { EyeDetailPass } from "./passes/eyeDetail";
+import { MakeupPass } from "./passes/makeup";
+import { FilterPass } from "./passes/filter";
+import { BackgroundPass } from "./passes/background";
 
 // 패스: 입력 텍스처 → target(FBO 또는 null=캔버스)에 결과 렌더.
 // 내부 FBO가 필요한 패스(스무딩)를 위해 resize/target/landmarks를 받는다.

@@ -1,9 +1,7 @@
-import { compileProgram, FULLSCREEN_VS } from "./glUtils";
-import type { FxPass } from "./passes";
+import { compileProgram, FULLSCREEN_VS } from "../../shared/gl/glUtils";
+import type { FxPass } from "../passes";
+export { FILTER_PRESETS } from "../../shared/lib/filterPresets";
 import type { NormalizedLandmark } from "@mediapipe/tasks-vision";
-
-// 원탭 무드/톤 프리셋(파라메트릭 컬러그레이드). 강도(intensity)로 블렌드.
-export const FILTER_PRESETS = ["없음", "화사", "쿨톤", "웜톤", "빈티지", "흑백", "필름"];
 
 const FILTER_FS = `#version 300 es
 precision highp float;

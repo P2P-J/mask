@@ -1,5 +1,5 @@
 import type { AppState, Layer } from "./types";
-import { FILTER_PRESETS } from "../gl/filter";
+import { FILTER_PRESETS } from "../../shared/lib/filterPresets";
 
 export function defaultLayers(): Layer[] {
   return [

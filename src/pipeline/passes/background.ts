@@ -6,8 +6,8 @@ import {
   PASSTHROUGH_FS,
   BLUR_FS,
   type RenderTarget,
-} from "./glUtils";
-import type { FxPass } from "./passes";
+} from "../../shared/gl/glUtils";
+import type { FxPass } from "../passes";
 
 // 인물=선명, 배경=블러. 마스크는 세그멘테이션(top-down)이라 y 반전 샘플.
 const COMPOSITE_FS = `#version 300 es

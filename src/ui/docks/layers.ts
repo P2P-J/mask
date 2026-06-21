@@ -1,5 +1,5 @@
-import type { Store } from "../state/store";
-import { getCategoryLayers, toggleLayer, selectLayer } from "../state/reducer";
+import type { Store } from "../../entities/scene/store";
+import { getCategoryLayers, toggleLayer, selectLayer } from "../../entities/scene/reducer";
 
 export class LayersDock {
   private listEl = document.getElementById("layer-list") as HTMLElement;

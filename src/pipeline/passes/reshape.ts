@@ -1,6 +1,6 @@
-import { compileProgram, FULLSCREEN_VS } from "./glUtils";
-import { buildDeformers, MAX_DEFORMERS } from "./reshapeDeformers";
-import type { FxPass } from "./passes";
+import { compileProgram, FULLSCREEN_VS } from "../../shared/gl/glUtils";
+import { buildDeformers, MAX_DEFORMERS } from "../geometry/reshapeDeformers";
+import type { FxPass } from "../passes";
 import type { NormalizedLandmark } from "@mediapipe/tasks-vision";
 
 // 다중 deformer 역워프: 각 화소에서 영향 합산 후 입력을 v_uv - disp 위치에서 샘플.

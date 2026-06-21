@@ -7,10 +7,10 @@ import {
   GEO_VS,
   BLUR_FS,
   type RenderTarget,
-} from "./glUtils";
-import { buildFan, buildMeshVerts } from "./faceMaskGeometry";
-import { FACE_TRIANGLES, HOLES } from "./faceRegions";
-import type { FxPass } from "./passes";
+} from "../../shared/gl/glUtils";
+import { buildFan, buildMeshVerts } from "../geometry/faceMaskGeometry";
+import { FACE_TRIANGLES, HOLES } from "../geometry/faceRegions";
+import type { FxPass } from "../passes";
 import type { NormalizedLandmark } from "@mediapipe/tasks-vision";
 
 // 마스크 지오메트리(랜드마크 윤곽 → 삼각형) 셰이더

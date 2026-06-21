@@ -1,5 +1,5 @@
-import type { Store } from "../state/store";
-import { switchScene, addScene, renameScene } from "../state/reducer";
+import type { Store } from "../../entities/scene/store";
+import { switchScene, addScene, renameScene } from "../../entities/scene/reducer";
 
 export class ScenesDock {
   private listEl = document.getElementById("scene-list") as HTMLElement;

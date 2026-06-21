@@ -1,5 +1,5 @@
-import type { Store } from "../state/store";
-import { getSelectedLayer, setParam, setColor, setSelect } from "../state/reducer";
+import type { Store } from "../../entities/scene/store";
+import { getSelectedLayer, setParam, setColor, setSelect } from "../../entities/scene/reducer";
 
 // 슬라이더 라벨(한국어)
 const LABELS: Record<string, string> = {

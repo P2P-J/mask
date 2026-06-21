@@ -1,4 +1,4 @@
-import { parseResolution } from "./format";
+import { parseResolution } from "../../shared/lib/format";
 
 export interface DiagnosticsSnapshot {
   fps: number; inferenceMs: number; frameMs: number;

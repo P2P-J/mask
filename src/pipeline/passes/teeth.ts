@@ -7,10 +7,10 @@ import {
   PASSTHROUGH_FS,
   GEO_VS,
   type RenderTarget,
-} from "./glUtils";
-import { buildFan } from "./faceMaskGeometry";
-import { LIPS } from "./faceRegions";
-import type { FxPass } from "./passes";
+} from "../../shared/gl/glUtils";
+import { buildFan } from "../geometry/faceMaskGeometry";
+import { LIPS } from "../geometry/faceRegions";
+import type { FxPass } from "../passes";
 import type { NormalizedLandmark } from "@mediapipe/tasks-vision";
 
 const GEO_FS = `#version 300 es

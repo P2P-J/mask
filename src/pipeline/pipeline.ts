@@ -3,10 +3,10 @@ import {
   createTexture,
   createRenderTarget,
   type RenderTarget,
-} from "./glUtils";
+} from "../shared/gl/glUtils";
 import { createPasses, type FxPass } from "./passes";
-import { BackgroundPass } from "./background";
-import type { Layer } from "../state/types";
+import { BackgroundPass } from "./passes/background";
+import type { Layer } from "../entities/scene/types";
 import type { NormalizedLandmark } from "@mediapipe/tasks-vision";
 
 export class Pipeline {
