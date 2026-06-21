@@ -14,8 +14,13 @@ const LABELS: Record<string, string> = {
   eyeBrighten: "눈 밝히기", aegyo: "애교살",
   noseSize: "코 축소", noseBridge: "콧대 슬림", noseTip: "코끝 축소", noseWing: "코볼 축소",
   mouthSize: "입 크기", lipThick: "입술 도톰", smile: "입꼬리(미소)", browHeight: "눈썹 높이",
+  // W4b 확장
+  faceLength: "얼굴 길이(±)", jawWidth: "턱폭(하관)", temple: "관자놀이", cheekReduce: "볼살 축소",
+  cheekLift: "볼 리프팅", innerCorner: "앞트임", outerCorner: "뒤트임", eyeHeight: "눈 높이",
+  eyePosY: "눈 위치 상하(±)", philtrum: "인중 길이(±)", lipWidth: "입술 너비(±)", cupidBow: "큐피드 보우",
+  noseRoot: "코뿌리", noseLength: "코 길이(±)", browDist: "눈썹 간격(±)",
   lipstick: "립스틱", blush: "블러셔", eyeshadow: "아이섀도", eyebrow: "아이브로우",
-  liner: "아이라이너", contour: "컨투어",
+  liner: "아이라이너", contour: "컨투어", eyelash: "속눈썹",
   intensity: "강도", preset: "프리셋",
   blur: "배경 흐림",
 };

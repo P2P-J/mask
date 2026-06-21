@@ -52,6 +52,10 @@ export function defaultLayers(): Layer[] {
         eyeSize: 0, eyeSpacing: 50, eyeCorner: 50, pupil: 0,
         noseSize: 0, noseBridge: 0, noseTip: 0, noseWing: 0,
         mouthSize: 0, lipThick: 0, smile: 0, browHeight: 0,
+        // W4b 확장
+        faceLength: 50, jawWidth: 0, temple: 0, cheekReduce: 0, cheekLift: 0,
+        innerCorner: 0, outerCorner: 0, eyeHeight: 0, eyePosY: 50,
+        philtrum: 50, lipWidth: 50, cupidBow: 0, noseRoot: 0, noseLength: 50, browDist: 50,
       },
     },
     {
