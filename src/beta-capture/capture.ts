@@ -13,6 +13,7 @@ export class CaptureLoop {
   private stream: MediaStream | null = null;
   private rec: MediaRecorder | null = null;
   private active = false;
+  private timer: number | null = null; // window.setTimeout → number(DOM)
   private mime: string;
 
   constructor(
@@ -41,17 +42,23 @@ export class CaptureLoop {
       if (e.data && e.data.size > 0) chunks.push(e.data);
     };
     rec.onstop = () => {
-      if (chunks.length) this.onClip(new Blob(chunks, { type: this.mime }), this.mime);
+      // 중단(stop) 후 발생한 마지막 부분 클립은 보내지 않는다 — 🔴 배지가 이미 꺼진 뒤
+      // 전송되어 "전송 중엔 항상 표시" 보장을 깨므로.
+      if (this.active && chunks.length) this.onClip(new Blob(chunks, { type: this.mime }), this.mime);
       this.cycle(); // 다음 클립
     };
     rec.start();
-    window.setTimeout(() => {
+    this.timer = window.setTimeout(() => {
       if (rec.state !== "inactive") rec.stop();
     }, this.clipSeconds * 1000);
   }
 
   stop(): void {
     this.active = false;
+    if (this.timer !== null) {
+      clearTimeout(this.timer);
+      this.timer = null;
+    }
     if (this.rec && this.rec.state !== "inactive") this.rec.stop();
     this.rec = null;
     if (this.stream) {

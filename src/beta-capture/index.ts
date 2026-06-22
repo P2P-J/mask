@@ -34,6 +34,7 @@ export function mountBetaCapture(opts: BetaCaptureOpts): () => void {
   const stop = (): void => {
     loop?.stop();
     loop = null;
+    sending = false; // 재시작 시 첫 클립이 드롭되지 않도록 백프레셔 초기화
     indicator?.hide();
     btn.classList.remove("on");
     btn.textContent = "🎥 테스트 캡처";
