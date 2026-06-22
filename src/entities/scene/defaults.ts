@@ -15,7 +15,12 @@ export function defaultLayers(): Layer[] {
       name: "색보정",
       category: "face",
       enabled: false,
-      params: { brightness: 50, contrast: 50, tone: 50, white: 50, saturation: 50, warmth: 50 },
+      params: {
+        brightness: 50, contrast: 50, tone: 50, white: 50, saturation: 50, warmth: 50,
+        // 확장(2026-06-22): 톤 디테일 + 색상 정밀 + 선명도
+        exposure: 50, highlights: 50, shadows: 50, gamma: 50,
+        tint: 50, vibrance: 50, hue: 50, sharpness: 0,
+      },
     },
     {
       id: "teeth",

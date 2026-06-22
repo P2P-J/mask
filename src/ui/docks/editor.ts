@@ -7,6 +7,8 @@ const LABELS: Record<string, string> = {
   clarity: "잡티/주름 완화", evenTone: "피부톤 균일화", brighten: "얼굴 밝히기", darkCircle: "다크서클 완화",
   brightness: "밝기", contrast: "대비", tone: "톤", white: "화이트밸런스",
   saturation: "채도", warmth: "따뜻함",
+  exposure: "노출(±)", highlights: "하이라이트(±)", shadows: "그림자(±)", gamma: "감마(±)",
+  tint: "색조 녹↔마젠타(±)", vibrance: "생동감(±)", hue: "색상 회전(±)", sharpness: "선명도",
   whiten: "화이트닝",
   slim: "얼굴 갸름", faceSize: "작은 얼굴", cheekbone: "광대 축소", jaw: "V라인 턱",
   chinLength: "턱 길이(±)", forehead: "이마 축소",
