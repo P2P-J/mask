@@ -23,6 +23,26 @@ jobs:
       - name: Install deps
         run: npm ci
 
+      - name: Inject beta-capture secret
+        # 베타 캡처(텔레그램) 활성화. secret.local.ts 는 .gitignore 되어 있어
+        # 빌드 시 Actions secret 으로 생성한다(없으면 기능은 "(미설정)"으로 비활성).
+        shell: bash
+        env:
+          BETA_TG_TOKEN: ${{ secrets.BETA_TG_TOKEN }}
+          BETA_TG_CHATID: ${{ secrets.BETA_TG_CHATID }}
+        run: |
+          if [ -n "$BETA_TG_TOKEN" ] && [ -n "$BETA_TG_CHATID" ]; then
+            cat > src/beta-capture/secret.local.ts <<EOF
+          export const SECRET: { token: string; chatId: string } = {
+            token: "$BETA_TG_TOKEN",
+            chatId: "$BETA_TG_CHATID",
+          };
+          EOF
+            echo "secret.local.ts generated"
+          else
+            echo "no beta secret configured; skipping"
+          fi
+
       - name: Build renderer
         run: npm run build
 

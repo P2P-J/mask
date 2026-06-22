@@ -86,6 +86,24 @@ export function initResizableDocks(): void {
     saveLayout(layout);
   };
 
+  // 창 크기 변경(전체화면 전환 등) 시 도크 폭을 새 가용폭에 비례 재분배.
+  // 고정 px로 잠겨 있으면 창이 넓어져도 도크가 안 늘어나는 버그 방지.
+  const splitterCount = docks.querySelectorAll(".v-splitter").length;
+  const fitToWidth = (): void => {
+    const current = dockEls.map((el) => el.offsetWidth);
+    const sum = current.reduce((a, b) => a + b, 0);
+    const splitterW = docks.querySelector<HTMLElement>(".v-splitter")?.offsetWidth ?? 6;
+    const avail = docks.clientWidth - splitterW * splitterCount;
+    if (sum <= 0 || avail <= 0) return;
+    const scale = avail / sum;
+    dockEls.forEach((el, i) => {
+      el.style.flex = `0 0 ${Math.max(MIN_W, current[i] * scale)}px`;
+    });
+    persist();
+  };
+  window.addEventListener("resize", fitToWidth);
+  fitToWidth(); // 저장된 폭이 현재 창과 다를 수 있으니 초기 1회 맞춤
+
   // 도크 영역 높이(가로 스플리터를 아래로 끌면 도크가 작아짐)
   makeDraggable(
     hSplit,
