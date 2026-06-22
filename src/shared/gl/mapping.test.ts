@@ -56,4 +56,24 @@ describe("colorUniforms", () => {
   it("sharpness 100 → 1", () => {
     expect(colorUniforms({ sharpness: 100 }).sharpness).toBeCloseTo(1, 5);
   });
+
+  it("2차 확장 중립/꺼짐 기본값", () => {
+    const u = colorUniforms({ structure: 50 });
+    expect(u.structure).toBeCloseTo(0, 5);
+    expect(u.fade).toBeCloseTo(0, 5);
+    expect(u.vignette).toBeCloseTo(0, 5);
+    expect(u.grain).toBeCloseTo(0, 5);
+    expect(u.splitTone).toBeCloseTo(0, 5);
+    expect(u.splitBalance).toBeCloseTo(0, 5);
+  });
+
+  it("structure 100 → +1, 0 → -1 / fade·vignette·grain·splitTone 100 → 1", () => {
+    expect(colorUniforms({ structure: 100 }).structure).toBeCloseTo(1, 5);
+    expect(colorUniforms({ structure: 0 }).structure).toBeCloseTo(-1, 5);
+    expect(colorUniforms({ fade: 100 }).fade).toBeCloseTo(1, 5);
+    expect(colorUniforms({ vignette: 100 }).vignette).toBeCloseTo(1, 5);
+    expect(colorUniforms({ grain: 100 }).grain).toBeCloseTo(1, 5);
+    expect(colorUniforms({ splitTone: 100 }).splitTone).toBeCloseTo(1, 5);
+    expect(colorUniforms({ splitBalance: 100 }).splitBalance).toBeCloseTo(1, 5);
+  });
 });

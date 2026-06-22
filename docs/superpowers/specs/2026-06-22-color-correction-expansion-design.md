@@ -68,3 +68,31 @@
 ## 리스크
 - 전부 best-effort 셰이더 상수 → 실기기 시각 튜닝 대상(특히 vibrance 피부보호 강도, sharpness 양, highlights/shadows 게이트 폭).
 - 화면을 볼 수 없으므로 블라인드 미세조정 금지 — 사용자 피드백 받아 조정.
+
+---
+
+## 2차 확장 — 경쟁 앱(B612/Ulike/SODA) 갭 보완 (2026-06-22)
+
+리서치로 확인한 조정 패널 갭: 구조·페이드·비네트·그레인·스플릿톤·HSL. 사용자 "전부" 선택.
+
+### Tier 1 — 스칼라 4종 (순수 셰이더)
+- **구조 Structure**(50중립, ±) — 입력 넓은 반경(≈3텍셀) 휘도 블러와의 차(중간주파 디테일)를 중간톤 가중으로 가산. 선명도(1텍셀)와 구분되는 로컬 대비.
+- **페이드 Fade**(0=off) — 매트/필름톤. `c = mix(c, c*0.85+0.12, f)` 블랙 리프트+대비 압축.
+- **비네트 Vignette**(0=off) — 화면 중심 거리(가로세로비 보정) 기반 가장자리 음영 곱.
+- **그레인 Grain**(0=off) — 픽셀좌표 해시 노이즈 가산.
+
+### Tier 2 — 스플릿 톤
+- **스플릿톤 강도 splitTone**(0=off) + **밸런스 splitBalance**(50중립) + 컬러 2개(`splitShadow`/`splitHighlight`, colors 맵 → 컬러피커 자동 렌더).
+- 휘도로 그림자/하이라이트 가중, 각 영역에 (색-0.5)*2 틴트 가산.
+
+### Tier 3 — HSL (8밴드)
+- 밴드: 빨강/주황/노랑/초록/청록/파랑/보라/자홍 (hue center 0,30,60,120,180,240,280,320°).
+- 각 밴드 H/S/L → params `hslH0..7`/`hslS0..7`/`hslL0..7` (24키, 50중립). 활성 밴드 = `selects.hslBand`.
+- 셰이더: rgb→hsv, 픽셀 hue의 밴드 가중(각거리 폴오프, 정규화) 합으로 `hueShift/satMul/lumAdd` → 적용 → hsv→rgb. 유니폼 배열 `u_hslH[8]/u_hslS[8]/u_hslL[8]`.
+- **editor 변경:** `hsl[HSL]\d` 키와 `hslBand` 셀렉트는 일반 루프에서 제외하고, 전용 HSL 위젯(밴드 드롭다운 + 활성 밴드 3슬라이더)으로 렌더. 슬라이더 행 생성은 `makeSlider` 헬퍼로 추출해 재사용.
+
+### 셰이더 최종 순서(갱신)
+sharpness/structure 디테일 추출(입력) → 노출 → 밝기 → 대비 → 하이라이트/그림자 → 감마 → 화이트밸런스/톤/따뜻함/색조 → 색상회전 → **HSL** → **스플릿톤** → 생동감 → 채도 → **구조 가산** → 선명도 가산 → **페이드** → **그레인** → **비네트** → clamp
+
+### 매핑(추가 스칼라)
+structure ±1, fade/vignette/grain/splitTone 0~1, splitBalance ±1. HSL 배열·스플릿 컬러는 `ColorPass.render`에서 params/colors로 직접 구성.

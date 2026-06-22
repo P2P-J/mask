@@ -20,7 +20,16 @@ export function defaultLayers(): Layer[] {
         // 확장(2026-06-22): 톤 디테일 + 색상 정밀 + 선명도
         exposure: 50, highlights: 50, shadows: 50, gamma: 50,
         tint: 50, vibrance: 50, hue: 50, sharpness: 0,
+        // 2차 확장: 구조/페이드/비네트/그레인 + 스플릿톤
+        structure: 50, fade: 0, vignette: 0, grain: 0, splitTone: 0, splitBalance: 50,
+        // HSL 8밴드(빨강~자홍) H/S/L, 50=중립
+        hslH0: 50, hslS0: 50, hslL0: 50, hslH1: 50, hslS1: 50, hslL1: 50,
+        hslH2: 50, hslS2: 50, hslL2: 50, hslH3: 50, hslS3: 50, hslL3: 50,
+        hslH4: 50, hslS4: 50, hslL4: 50, hslH5: 50, hslS5: 50, hslL5: 50,
+        hslH6: 50, hslS6: 50, hslL6: 50, hslH7: 50, hslS7: 50, hslL7: 50,
       },
+      colors: { splitShadow: "#3a5a6a", splitHighlight: "#6a5a3a" },
+      selects: { hslBand: { value: "빨강", options: ["빨강", "주황", "노랑", "초록", "청록", "파랑", "보라", "자홍"] } },
     },
     {
       id: "teeth",
