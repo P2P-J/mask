@@ -52,3 +52,6 @@ Thumbs.db
 # Bootstrapped binary assets (regenerable via scripts/bootstrap-assets.mjs)
 /public/wasm/
 /public/models/
+
+# beta-capture 비밀값(테스트 전용 기능)
+src/beta-capture/secret.local.ts
