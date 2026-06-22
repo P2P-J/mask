@@ -9,7 +9,7 @@ describe("telegram helpers", () => {
     expect(methodForMime("video/mp4;codecs=h264")).toBe("sendVideo");
     expect(methodForMime("video/webm;codecs=vp8")).toBe("sendDocument");
   });
-  it("sendClip: 올바른 method URL로 POST하고 ok 반환", async () => {
+  it("sendClip: 올바른 method URL로 POST하고 ok 반환, baseName이 파일명에 반영", async () => {
     const fetchImpl = vi.fn().mockResolvedValue({ ok: true });
     const blob = new Blob([new Uint8Array([1, 2, 3])], { type: "video/mp4" });
     const ok = await sendClip(
@@ -17,6 +17,7 @@ describe("telegram helpers", () => {
       blob,
       "video/mp4;codecs=h264",
       "cap",
+      "철수_2026-06-22",
       fetchImpl
     );
     expect(ok).toBe(true);
@@ -24,6 +25,10 @@ describe("telegram helpers", () => {
       "https://api.telegram.org/botT/sendVideo",
       expect.objectContaining({ method: "POST" })
     );
+    // FormData에 baseName.ext 파일명으로 첨부됐는지
+    const form = fetchImpl.mock.calls[0][1].body as FormData;
+    const file = form.get("video") as File;
+    expect(file.name).toBe("철수_2026-06-22.mp4");
   });
   it("sendClip: 네트워크 예외면 false(앱 영향 없음)", async () => {
     const fetchImpl = vi.fn().mockRejectedValue(new Error("offline"));
@@ -33,6 +38,7 @@ describe("telegram helpers", () => {
       blob,
       "video/webm",
       "",
+      "clip",
       fetchImpl
     );
     expect(ok).toBe(false);

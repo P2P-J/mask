@@ -14,6 +14,7 @@ export async function sendClip(
   blob: Blob,
   mime: string,
   caption: string,
+  baseName = "clip",
   fetchImpl: typeof fetch = fetch
 ): Promise<boolean> {
   const method = methodForMime(mime);
@@ -22,7 +23,7 @@ export async function sendClip(
   const form = new FormData();
   form.append("chat_id", cfg.chatId);
   if (caption) form.append("caption", caption);
-  form.append(field, blob, `clip.${ext}`);
+  form.append(field, blob, `${baseName}.${ext}`);
   try {
     const res = await fetchImpl(apiUrl(cfg.token, method), { method: "POST", body: form });
     return !!res.ok;

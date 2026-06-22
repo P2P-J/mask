@@ -24,7 +24,10 @@ export function injectStyles(): void {
 .bc-row{display:flex;gap:8px;justify-content:flex-end;margin-top:16px}
 .bc-btn{border:0;border-radius:8px;padding:9px 14px;cursor:pointer;font:14px sans-serif}
 .bc-ok{background:#3182F6;color:#fff}
-.bc-no{background:#3a3d44;color:#e3e5e8}`;
+.bc-no{background:#3a3d44;color:#e3e5e8}
+.bc-name-label{display:block;margin-top:14px;font-size:13px;color:#b5bac1}
+.bc-name{display:block;width:100%;box-sizing:border-box;margin-top:6px;padding:8px 10px;
+  border-radius:8px;border:1px solid #3a3d44;background:#111317;color:#e3e5e8;font:14px sans-serif}`;
   const el = document.createElement("style");
   el.id = "bc-styles";
   el.textContent = css;
