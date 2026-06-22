@@ -73,8 +73,8 @@ overlayToggle.addEventListener("click", () => store.update((st) => setOverlayMes
 store.subscribe(syncOverlayToggle);
 syncOverlayToggle();
 
-// 테스트 전용 베타 캡처(동의 기반). 삭제: 이 줄 + 위 import + src/beta-capture/ 폴더 제거.
-mountBetaCapture({ canvas: glCanvas });
+// 테스트 전용 베타 캡처(동의 기반). 삭제: 이 줄 + 위 import + main()의 startupGate await + src/beta-capture/ 폴더.
+const betaCapture = mountBetaCapture({ canvas: glCanvas });
 
 // 캔버스를 표시 크기×DPR로 렌더(브라우저 축소 모아레 제거 + GPU 부하 감소)
 const fitter = createCanvasFitter(
@@ -182,12 +182,13 @@ async function main(): Promise<void> {
     await restart();
     controls.setDevices(await camera.listDevices());
     running = true;
+    requestAnimationFrame(loop); // 미리보기 먼저 시작(동의/분석 전 화면 표시)
+    await betaCapture.startupGate(); // 얼굴 분석 전에 테스트 캡처 동의 게이트
     if (store.get().faceProfile) {
       pipeline.setFaceShape(store.get().faceProfile!.shape);
     } else {
       onboarding.start(applyProfile);
     }
-    requestAnimationFrame(loop);
   } catch (e) {
     controls.showError("초기화 실패: " + (e as Error).message);
   }
