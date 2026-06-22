@@ -17,6 +17,7 @@ import { Onboarding } from "../ui/onboarding";
 import { SHAPE_LABEL_KO } from "../vision/faceAnalysis";
 import type { FaceProfile } from "../vision/faceAnalysis";
 import { LandmarkSmoother } from "../vision/landmarkSmoother";
+import { mountBetaCapture } from "../beta-capture";
 
 const glCanvas = document.getElementById("gl-canvas") as HTMLCanvasElement;
 const overlayCanvas = document.getElementById("overlay-canvas") as HTMLCanvasElement;
@@ -71,6 +72,9 @@ function syncOverlayToggle(): void {
 overlayToggle.addEventListener("click", () => store.update((st) => setOverlayMesh(st, !st.overlayMesh)));
 store.subscribe(syncOverlayToggle);
 syncOverlayToggle();
+
+// 테스트 전용 베타 캡처(동의 기반). 삭제: 이 줄 + 위 import + src/beta-capture/ 폴더 제거.
+mountBetaCapture({ canvas: glCanvas });
 
 // 캔버스를 표시 크기×DPR로 렌더(브라우저 축소 모아레 제거 + GPU 부하 감소)
 const fitter = createCanvasFitter(
