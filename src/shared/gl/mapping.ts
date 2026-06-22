@@ -52,6 +52,7 @@ export function colorUniforms(p: Record<string, number>): ColorUniforms {
 }
 
 // HSL 8밴드 — 활성 밴드 select 옵션(한국어) ↔ hue center(turns 0..1)
+// ⚠ passes.ts COLOR_FS 의 HSL_CENTERS[8] 와 순서·center 동일 유지(editor 밴드 인덱스가 양쪽 위치에 의존).
 export const HSL_BANDS = [
   { name: "빨강", center: 0 / 360 },
   { name: "주황", center: 30 / 360 },

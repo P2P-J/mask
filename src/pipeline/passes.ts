@@ -48,6 +48,7 @@ uniform float u_structure;  // -1..1
 uniform float u_fade;       // 0..1
 uniform float u_vignette;   // 0..1
 uniform float u_grain;      // 0..1
+uniform float u_seed;       // 그레인 프레임 시드(매 프레임 변동 → 움직이는 입자)
 uniform float u_splitTone;  // 0..1
 uniform float u_splitBalance; // -1..1
 uniform vec3  u_splitShadow;  // 0..1 (틴트 색, 0.5=중립)
@@ -58,6 +59,7 @@ uniform float u_hslL[8];    // -1..1
 out vec4 o;
 
 const vec3 LUMA = vec3(0.299, 0.587, 0.114);
+// HSL 8밴드 hue center(turns). ⚠ mapping.ts 의 HSL_BANDS 와 순서·값 동일 유지(editor 밴드 인덱스가 양쪽 위치에 의존).
 const float HSL_CENTERS[8] = float[8](0.0, 30.0/360.0, 60.0/360.0, 120.0/360.0, 180.0/360.0, 240.0/360.0, 280.0/360.0, 320.0/360.0);
 
 // 휘도(grey)축 기준 색상 회전 — Rodrigues 회전
@@ -180,9 +182,9 @@ void main(){
   // 페이드(매트): 블랙 리프트 + 대비 압축
   if (u_fade > 0.0) c = mix(c, c * 0.85 + 0.12, u_fade);
 
-  // 그레인(필름 입자)
+  // 그레인(필름 입자) — u_seed로 매 프레임 노이즈 필드 이동
   if (u_grain > 0.0) {
-    float n = hash21(v_uv / u_texel) - 0.5;
+    float n = hash21(v_uv / u_texel + u_seed * vec2(0.137, 0.219)) - 0.5;
     c += n * u_grain * 0.12;
   }
 
@@ -259,6 +261,7 @@ export class ColorPass implements FxPass {
     fade: WebGLUniformLocation | null;
     vignette: WebGLUniformLocation | null;
     grain: WebGLUniformLocation | null;
+    seed: WebGLUniformLocation | null;
     splitTone: WebGLUniformLocation | null;
     splitBalance: WebGLUniformLocation | null;
     splitShadow: WebGLUniformLocation | null;
@@ -269,6 +272,7 @@ export class ColorPass implements FxPass {
   };
   private w = 0;
   private h = 0;
+  private frame = 0; // 그레인 애니메이션용 프레임 카운터
   constructor(private gl: WebGL2RenderingContext) {
     this.prog = compileProgram(gl, FULLSCREEN_VS, COLOR_FS);
     this.u = {
@@ -292,6 +296,7 @@ export class ColorPass implements FxPass {
       fade: gl.getUniformLocation(this.prog, "u_fade"),
       vignette: gl.getUniformLocation(this.prog, "u_vignette"),
       grain: gl.getUniformLocation(this.prog, "u_grain"),
+      seed: gl.getUniformLocation(this.prog, "u_seed"),
       splitTone: gl.getUniformLocation(this.prog, "u_splitTone"),
       splitBalance: gl.getUniformLocation(this.prog, "u_splitBalance"),
       splitShadow: gl.getUniformLocation(this.prog, "u_splitShadow"),
@@ -335,6 +340,8 @@ export class ColorPass implements FxPass {
     gl.uniform1f(this.u.fade, c.fade);
     gl.uniform1f(this.u.vignette, c.vignette);
     gl.uniform1f(this.u.grain, c.grain);
+    this.frame = (this.frame + 1) % 4096;
+    gl.uniform1f(this.u.seed, this.frame);
     gl.uniform1f(this.u.splitTone, c.splitTone);
     gl.uniform1f(this.u.splitBalance, c.splitBalance);
     const sh = hexToRgb(colors?.splitShadow);
