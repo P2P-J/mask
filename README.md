@@ -4,10 +4,11 @@
 
 # Mask
 
-**웹캠 얼굴을 실시간으로 "티 안 나게" 보정하는 100% 로컬 · 무료 · 오픈소스 데스크톱 앱**
+**핸드폰으로 사진 뽀샵하듯, 웹캠 얼굴을 실시간으로 보정해주는 한국산 무료 · 오픈소스 데스크톱 앱**
 
-상용 뷰티 SDK 없이 — `MediaPipe Face Landmarker` + 자체 `WebGL2` 셰이더 파이프라인으로.
-모든 처리는 온디바이스. **얼굴 영상이 이 PC를 떠나지 않습니다.**
+줌 미팅 · 디스코드 게임 · 화상채팅에서 "오늘따라 내 얼굴이 좀…" 싶을 때.
+상용 뷰티 SDK 없이 `MediaPipe Face Landmarker` + 자체 `WebGL2` 셰이더로, 100% 온디바이스 처리.
+**얼굴 영상이 이 PC를 떠나지 않습니다.**
 
 [![Release](https://img.shields.io/github/v/release/P2P-J/mask?style=flat-square&color=4f8cff)](https://github.com/P2P-J/mask/releases)
 [![Platform](https://img.shields.io/badge/platform-Windows%2011-4f8cff?style=flat-square)](https://github.com/P2P-J/mask/releases)
@@ -21,9 +22,11 @@
 
 ## 한눈에
 
-OBS·치지직·SOOP·줌에 그대로 물려 쓰는, **Windows 11 전용** 실시간 얼굴 보정 도구입니다.
-벤치마크는 상용 앱 **YYCam Pro** — 하지만 라이선스가 묶인 뷰티 SDK를 쓰지 않고,
-공개 모델(MediaPipe)과 **직접 작성한 WebGL2 셰이더**만으로 자연스러운 결과를 재현하는 것이 핵심 도전입니다.
+줌·디스코드·화상채팅에서 카메라를 켤 때마다 생각했습니다 — "사진은 폰으로 뽀샵하면서, 왜 실시간 영상은 안 될까?"
+찾아보니 비슷한 도구로 중국의 **YYCam Pro**가 있었지만 **유료**였습니다. 그래서 **한국산 · 무료 · 오픈소스** 대안을 직접 만들었습니다.
+
+OBS·치지직·SOOP·줌에 그대로 물려 쓰는 **Windows 11 전용** 실시간 얼굴 보정 도구이며,
+라이선스가 묶인 상용 뷰티 SDK 없이 공개 모델(MediaPipe)과 **직접 작성한 WebGL2 셰이더**만으로 자연스러운 결과를 재현하는 것이 핵심 도전입니다.
 
 핵심 원칙은 세 가지입니다.
 
